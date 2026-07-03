@@ -1,0 +1,12 @@
+{
+  "name": "functions",
+  "description": "VYW auth + Gemini proxy (키 은닉)",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.0.1"
+  },
+  "private": true
+}

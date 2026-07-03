@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYW — Brand Bible · Vol.01</title>
+    <meta name="description" content="VYW 브랜드 바이블 — 코어·세계관·팔레트·뮤즈·장르·원칙·룩북 운영, 그리고 첫 번째 파편 Afar.">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard (본문/UI) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Custom Configuration for VYW Palette -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vyw: {
+                            pink: '#EAC6D5', glass: '#D4CCDD', cool: '#9B8FB0',
+                            deep: '#4A3F5C', white: '#F3ECEE', chrome: '#C1C1CD',
+                            dawn: '#5D5573', dark: '#2D2536', charcoal: '#1A1420'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard Variable', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        serif: ['Hahmlet', 'Pretendard Variable', 'Pretendard', 'serif'],
+                        playfair: ['Hahmlet', 'Pretendard Variable', 'Pretendard', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Hahmlet SemiBold — 제목용 명조 세리프(한글+라틴, 자체 호스팅) */
+        @font-face {
+            font-family: 'Hahmlet';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: local('Hahmlet SemiBold'), local('Hahmlet-SemiBold'),
+                 url('assets/fonts/Hahmlet-SemiBold.woff2') format('woff2');
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: #120D17;
+            color: #F3ECEE;
+            font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 300;
+            background-image: radial-gradient(circle at 50% 12%, #2A1F35 0%, #120D17 60%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1A1420; }
+        ::-webkit-scrollbar-thumb { background: #4A3F5C; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9B8FB0; }
+
+        .magazine-card {
+            background: rgba(45, 37, 54, 0.40);
+            border: 1px solid rgba(212, 204, 221, 0.15);
+            backdrop-filter: blur(16px);
+        }
+
+        /* 소프트 드리프팅 오브 */
+        @keyframes subtle-pulse { 0%,100%{opacity:.14} 50%{opacity:.28} }
+        .bg-pulse { animation: subtle-pulse 5s infinite ease-in-out; }
+
+        /* ✨ 트윙클 스타 */
+        .vyw-stars{position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;z-index:0}
+        .vyw-stars::before,.vyw-stars::after{content:"";position:absolute;top:0;left:0;border-radius:50%;background:transparent}
+        .vyw-stars::before{width:2.5px;height:2.5px;box-shadow:154px 1291px 0 #FFFFFF, 154px 1291px 4px #FFFFFF, 173px 795px 0 #FFFFFF, 173px 795px 4px #FFFFFF, 1285px 659px 0 #FFFFFF, 1285px 659px 4px #FFFFFF, 1356px 733px 0 #FFFFFF, 1356px 733px 4px #FFFFFF, 1875px 409px 0 #FFFFFF, 1875px 409px 4px #FFFFFF, 946px 53px 0 #FFFFFF, 946px 53px 4px #FFFFFF, 1719px 734px 0 #FFFFFF, 1719px 734px 4px #FFFFFF, 1413px 754px 0 #FFFFFF, 1413px 754px 4px #FFFFFF, 1411px 648px 0 #FFFFFF, 1411px 648px 4px #FFFFFF, 37px 110px 0 #FFFFFF, 37px 110px 4px #FFFFFF, 837px 113px 0 #FFFFFF, 837px 113px 4px #FFFFFF, 988px 243px 0 #FFFFFF, 988px 243px 4px #FFFFFF, 1543px 894px 0 #FFFFFF, 1543px 894px 4px #FFFFFF, 1741px 1031px 0 #FFFFFF, 1741px 1031px 4px #FFFFFF, 372px 831px 0 #FFFFFF, 372px 831px 4px #FFFFFF, 453px 1267px 0 #FFFFFF, 453px 1267px 4px #FFFFFF, 685px 419px 0 #FFFFFF, 685px 419px 4px #FFFFFF, 1520px 915px 0 #FFFFFF, 1520px 915px 4px #FFFFFF, 75px 666px 0 #FFFFFF, 75px 666px 4px #FFFFFF, 876px 721px 0 #FFFFFF, 876px 721px 4px #FFFFFF, 1623px 308px 0 #FFFFFF, 1623px 308px 4px #FFFFFF, 1110px 5px 0 #FFFFFF, 1110px 5px 4px #FFFFFF, 1534px 421px 0 #FFFFFF, 1534px 421px 4px #FFFFFF, 1742px 128px 0 #FFFFFF, 1742px 128px 4px #FFFFFF, 397px 77px 0 #FFFFFF, 397px 77px 4px #FFFFFF, 1848px 1157px 0 #FFFFFF, 1848px 1157px 4px #FFFFFF, 472px 340px 0 #FFFFFF, 472px 340px 4px #FFFFFF, 937px 1082px 0 #FFFFFF, 937px 1082px 4px #FFFFFF, 1148px 706px 0 #FFFFFF, 1148px 706px 4px #FFFFFF, 679px 1032px 0 #FFFFFF, 679px 1032px 4px #FFFFFF, 707px 1189px 0 #FFFFFF, 707px 1189px 4px #FFFFFF, 1725px 492px 0 #FFFFFF, 1725px 492px 4px #FFFFFF, 1042px 715px 0 #FFFFFF, 1042px 715px 4px #FFFFFF, 1463px 137px 0 #FFFFFF, 1463px 137px 4px #FFFFFF, 1735px 1083px 0 #FFFFFF, 1735px 1083px 4px #FFFFFF, 1588px 86px 0 #FFFFFF, 1588px 86px 4px #FFFFFF, 484px 1132px 0 #FFFFFF, 484px 1132px 4px #FFFFFF, 694px 397px 0 #FFFFFF, 694px 397px 4px #FFFFFF, 652px 914px 0 #FFFFFF, 652px 914px 4px #FFFFFF, 1653px 29px 0 #FFFFFF, 1653px 29px 4px #FFFFFF, 418px 595px 0 #FFFFFF, 418px 595px 4px #FFFFFF, 1690px 1125px 0 #FFFFFF, 1690px 1125px 4px #FFFFFF, 349px 1103px 0 #FFFFFF, 349px 1103px 4px #FFFFFF, 1466px 648px 0 #FFFFFF, 1466px 648px 4px #FFFFFF, 1242px 480px 0 #FFFFFF, 1242px 480px 4px #FFFFFF, 378px 234px 0 #FFFFFF, 378px 234px 4px #FFFFFF, 1605px 674px 0 #FFFFFF, 1605px 674px 4px #FFFFFF, 325px 791px 0 #FFFFFF, 325px 791px 4px #FFFFFF, 1501px 41px 0 #FFFFFF, 1501px 41px 4px #FFFFFF;animation:vywTwk1 3s ease-in-out infinite}
+        .vyw-stars::after{width:3.5px;height:3.5px;box-shadow:1380px 342px 0 #FFFFFF, 1380px 342px 8px #FFFFFF, 570px 1046px 0 #FFFFFF, 570px 1046px 8px #FFFFFF, 1094px 468px 0 #FFFFFF, 1094px 468px 8px #FFFFFF, 99px 1040px 0 #FFFFFF, 99px 1040px 8px #FFFFFF, 116px 716px 0 #FFFFFF, 116px 716px 8px #FFFFFF, 505px 179px 0 #FFFFFF, 505px 179px 8px #FFFFFF, 389px 1188px 0 #FFFFFF, 389px 1188px 8px #FFFFFF, 996px 807px 0 #FFFFFF, 996px 807px 8px #FFFFFF, 997px 182px 0 #FFFFFF, 997px 182px 8px #FFFFFF, 683px 147px 0 #FFFFFF, 683px 147px 8px #FFFFFF, 1107px 345px 0 #FFFFFF, 1107px 345px 8px #FFFFFF, 1317px 364px 0 #FFFFFF, 1317px 364px 8px #FFFFFF, 1719px 694px 0 #FFFFFF, 1719px 694px 8px #FFFFFF, 265px 1216px 0 #FFFFFF, 265px 1216px 8px #FFFFFF, 574px 699px 0 #FFFFFF, 574px 699px 8px #FFFFFF, 1200px 326px 0 #FFFFFF, 1200px 326px 8px #FFFFFF, 934px 896px 0 #FFFFFF, 934px 896px 8px #FFFFFF, 780px 1267px 0 #FFFFFF, 780px 1267px 8px #FFFFFF, 536px 378px 0 #FFFFFF, 536px 378px 8px #FFFFFF, 1127px 173px 0 #FFFFFF, 1127px 173px 8px #FFFFFF;animation:vywTwk2 2s ease-in-out infinite}
+        @keyframes vywTwk1{0%,100%{opacity:.85}50%{opacity:1}}
+        @keyframes vywTwk2{0%,100%{opacity:.95}50%{opacity:1}}
+
+        /* 스크롤 리빌 */
+        .reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.in { opacity: 1; transform: none; }
+
+        /* 목차(스티키) */
+        .toc-link { color: rgba(212,204,221,0.5); transition: color .3s, border-color .3s; border-bottom: 1px solid transparent; white-space: nowrap; }
+        .toc-link:hover { color: #F3ECEE; }
+        .toc-link.active { color: #EAC6D5; border-color: #EAC6D5; }
+
+        /* 유틸 라벨 */
+        .bb-label { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(155,143,176,0.9); }
+        .bb-num-ghost { font-family: 'Hahmlet', serif; font-weight: 700; line-height: 1; color: rgba(212,204,221,0.10); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .vyw-stars::before, .vyw-stars::after { animation: none; opacity: 1; }
+            .bg-pulse { animation: none; }
+            .reveal { opacity: 1; transform: none; transition: none; }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- 글로벌 배경 데코 -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-vyw-pink/10 filter blur-[120px] bg-pulse"></div>
+    <div class="absolute top-1/3 -right-24 w-[28rem] h-[28rem] rounded-full bg-vyw-cool/15 filter blur-[150px] bg-pulse" style="animation-delay:2.5s;"></div>
+    <div class="absolute bottom-0 left-1/3 w-[26rem] h-[26rem] rounded-full bg-vyw-deep/25 filter blur-[150px] bg-pulse" style="animation-delay:4s;"></div>
+</div>
+<div class="vyw-stars" aria-hidden="true"></div>
+
+<!-- ========== HEADER ========== -->
+<header class="relative z-30 border-b border-vyw-glass/10 px-6 py-4 backdrop-blur-md bg-vyw-charcoal/40 sticky top-0">
+    <div class="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center space-x-3">
+            <a href="index.html" class="flex items-center hover:opacity-80 transition-opacity" aria-label="VYW home">
+                <img src="assets/logo-pink.png" alt="VYW" class="h-7 w-auto">
+            </a>
+            <span class="h-4 w-[1px] bg-vyw-glass/20 hidden sm:block"></span>
+            <p class="text-[11px] text-vyw-glass/55 tracking-[0.28em] font-light hidden sm:block">BRAND BIBLE · VOL.01</p>
+        </div>
+        <nav class="flex items-center gap-5 text-[11px] tracking-[0.18em] uppercase">
+            <a href="index.html" class="text-vyw-glass/70 hover:text-white transition-colors">홈</a>
+            <a href="lookbook.html" class="text-vyw-glass/70 hover:text-white transition-colors">Lookbook</a>
+        </nav>
+    </div>
+</header>
+
+<!-- ========== COVER HERO ========== -->
+<section class="relative z-10 overflow-hidden">
+    <div class="absolute inset-0" style="background:radial-gradient(ellipse 60% 50% at 50% 40%, rgba(74,63,92,0.55), transparent 70%);"></div>
+    <div class="relative max-w-4xl mx-auto px-6 pt-24 pb-20 md:pt-32 md:pb-28 text-center space-y-6">
+        <img src="assets/logo-white.png" alt="VYW mark" class="w-20 md:w-28 mx-auto drop-shadow-[0_8px_34px_rgba(234,198,213,0.28)]">
+        <div class="font-mono text-[10px] md:text-[11px] tracking-[0.5em] text-vyw-cool uppercase">Brand Bible · Vol. 01</div>
+        <h1 class="font-serif font-semibold text-white text-5xl md:text-7xl leading-[1.02]">Beyond<br>the fragment</h1>
+        <div class="space-y-1 pt-2">
+            <div class="text-vyw-pink tracking-[0.35em] text-sm md:text-base">위태로운 연약함</div>
+            <div class="text-vyw-glass/60 tracking-[0.35em] text-[10px] md:text-[11px] font-mono uppercase">precarious fragility</div>
+        </div>
+        <p class="text-xs text-vyw-glass/50 tracking-[0.15em] pt-4">비비 · VIVI — A visual lookbook project</p>
+    </div>
+</section>
+
+<!-- ========== 스티키 목차 ========== -->
+<nav class="sticky top-[61px] z-20 border-y border-vyw-glass/10 bg-vyw-charcoal/60 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex gap-4 md:gap-6 overflow-x-auto py-3 text-[11px] tracking-[0.14em] uppercase font-mono scrollbar-none" style="scrollbar-width:none;">
+            <a href="#core" data-target="core" class="toc-link">01 코어</a>
+            <a href="#world" data-target="world" class="toc-link">02 세계관</a>
+            <a href="#palette" data-target="palette" class="toc-link">03 팔레트</a>
+            <a href="#muse" data-target="muse" class="toc-link">04 뮤즈</a>
+            <a href="#genre" data-target="genre" class="toc-link">05 장르</a>
+            <a href="#principles" data-target="principles" class="toc-link">06 원칙</a>
+            <a href="#lookbook" data-target="lookbook" class="toc-link">07 룩북</a>
+            <a href="#system" data-target="system" class="toc-link">08 운영</a>
+            <a href="#fragment-01" data-target="fragment-01" class="toc-link text-vyw-pink/80">✦ Afar</a>
+            <a href="#ai-prompt" data-target="ai-prompt" class="toc-link">09 AI</a>
+        </div>
+    </div>
+</nav>
+
+<main class="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-14 md:py-20 space-y-8">
+
+    <!-- 01 CORE -->
+    <section id="core" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-7">
+                <span class="bb-num-ghost text-5xl md:text-6xl">01</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">코어 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">core</span></h2>
+            </div>
+            <p class="font-serif text-lg md:text-xl text-vyw-white/90 leading-relaxed mb-8">
+                VYW는 일본 서브컬처 러블리 장르의 위태로운 소녀성을<br class="hidden md:block">
+                "그리워하다 만" 톤으로 증류한 룩북 프로젝트.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6 md:gap-10">
+                <div class="space-y-2">
+                    <div class="bb-label">Origin</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">"차갑지만 무른, 단단하지만 무른." 브랜드의 원형은 감정이 아니라 <strong class="text-vyw-white font-medium">질감의 모순</strong>. 이 모순이 옷·공간·서명 모든 층위에서 반복된다.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Emotion</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed"><strong class="text-vyw-white font-medium">속하지 못한 감각.</strong> 저 세계는 내 것이 아니고, 내 세계에서도 나는 표류 중이다. 만화 속 장면처럼 먼 곳을 본다.</p>
+                </div>
+            </div>
+            <blockquote class="mt-8 pl-5 border-l-2 border-vyw-pink/60 font-serif italic text-vyw-glass text-base md:text-lg leading-relaxed">
+                그리워하다 만. 너머를 보고 있지만 무표정해서 감정은 느껴지지 않는.
+            </blockquote>
+            <div class="mt-8">
+                <div class="bb-label mb-2">Core Principle</div>
+                <p class="font-serif text-xl md:text-2xl text-vyw-pink mb-3">선명해질수록 아련함이 탁해진다.</p>
+                <p class="text-sm text-vyw-glass/80 leading-relaxed">모든 시각적 결정의 기준. 장르의 디폴트 톤이 선명·강렬하더라도, VYW의 필터를 거치면 한 톤 바래야 한다. 바랜 핑크, 오래된 레이스, 흐릿한 체크, 먹먹한 크롬.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 02 WORLD -->
+    <section id="world" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-6">
+                <span class="bb-num-ghost text-5xl md:text-6xl">02</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">세계관 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">world</span></h2>
+            </div>
+            <p class="text-sm md:text-[15px] text-vyw-glass/85 leading-relaxed mb-7">세계는 하나. 뮤즈는 그 세계 안에서 작은 파편을 들여다본다. 파편은 다른 세계로 향하는 창이다. 크롬 구체, 거울 조각, 유리 표면, 액체 금속 웅덩이 — 이 매개물을 통해 닿지 않는 곳을 관찰한다. 닿으려 하지는 않는다. 보는 행위에 머문다.</p>
+            <div class="grid md:grid-cols-2 gap-6 md:gap-10">
+                <div class="space-y-2">
+                    <div class="bb-label">Structure</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">챕터로 나누지 않는다. 각 Fragment는 뮤즈가 들여다보는 <strong class="text-vyw-white font-medium">하나의 파편</strong>. 파편이 달라질 뿐 세계는 이어진다.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Signature</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed"><strong class="text-vyw-white font-medium">흐르는 크롬.</strong> 유기적 곡선, 액체·방울·조약돌 형태. 직각·공업 금속 금지. 모든 Fragment의 모든 룩에 반드시 하나 이상 등장.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 03 PALETTE -->
+    <section id="palette" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-6">
+                <span class="bb-num-ghost text-5xl md:text-6xl">03</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">팔레트 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">palette</span></h2>
+            </div>
+            <p class="text-sm text-vyw-glass/80 mb-6">다섯 색. 모두 한 번 바랜 듯한 톤. 순수한 검정·순백·선명한 색 금지.</p>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="border border-vyw-glass/15 rounded-xl p-3 bg-black/10">
+                    <div class="w-full h-16 rounded-lg mb-3 shadow-inner" style="background:#EAC6D5;"></div>
+                    <div class="text-xs text-vyw-white">파우더 핑크</div>
+                    <div class="font-mono text-[10px] text-vyw-cool mt-0.5">#EAC6D5</div>
+                    <div class="text-[11px] text-vyw-glass/55 mt-1.5 leading-snug">옷의 중심. 맑고 분홍기 있는 파우더.</div>
+                </div>
+                <div class="border border-vyw-glass/15 rounded-xl p-3 bg-black/10">
+                    <div class="w-full h-16 rounded-lg mb-3 shadow-inner" style="background:#9B8FB0;"></div>
+                    <div class="text-xs text-vyw-white">차가운 라일락</div>
+                    <div class="font-mono text-[10px] text-vyw-cool mt-0.5">#9B8FB0</div>
+                    <div class="text-[11px] text-vyw-glass/55 mt-1.5 leading-snug">공기의 색. 아련함의 핵심.</div>
+                </div>
+                <div class="border border-vyw-glass/15 rounded-xl p-3 bg-black/10">
+                    <div class="w-full h-16 rounded-lg mb-3 shadow-inner" style="background:#C1C1CD;"></div>
+                    <div class="text-xs text-vyw-white">흐르는 크롬</div>
+                    <div class="font-mono text-[10px] text-vyw-cool mt-0.5">#C1C1CD</div>
+                    <div class="text-[11px] text-vyw-glass/55 mt-1.5 leading-snug">액체 금속. 브랜드의 서명.</div>
+                </div>
+                <div class="border border-vyw-glass/15 rounded-xl p-3 bg-black/10">
+                    <div class="w-full h-16 rounded-lg mb-3 shadow-inner" style="background:#5D5573;"></div>
+                    <div class="text-xs text-vyw-white">회보라</div>
+                    <div class="font-mono text-[10px] text-vyw-cool mt-0.5">#5D5573</div>
+                    <div class="text-[11px] text-vyw-glass/55 mt-1.5 leading-snug">그림자 빛. 포인트 어둠.</div>
+                </div>
+                <div class="border border-vyw-glass/15 rounded-xl p-3 bg-black/10 col-span-2 md:col-span-1">
+                    <div class="w-full h-16 rounded-lg mb-3 shadow-inner" style="background:#F3ECEE;"></div>
+                    <div class="text-xs text-vyw-white">입김 화이트</div>
+                    <div class="font-mono text-[10px] text-vyw-cool mt-0.5">#F3ECEE</div>
+                    <div class="text-[11px] text-vyw-glass/55 mt-1.5 leading-snug">숨 같은 여백. 피부와 안개.</div>
+                </div>
+            </div>
+            <div class="mt-8 rounded-xl border border-red-500/20 bg-red-500/5 p-5">
+                <div class="bb-label text-red-300/90 mb-2">✗ Banned Colors</div>
+                <p class="text-sm text-vyw-glass/80 leading-relaxed">순수한 초록 · 형광 · 비비드 빨강 · 비비드 파랑 · 쨍한 노랑 · 순백 · 순검정. 이 색들이 들어오는 순간 세계가 깨진다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 04 MUSE -->
+    <section id="muse" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl overflow-hidden grid md:grid-cols-2">
+            <div class="relative min-h-[280px]">
+                <img src="assets/main-mood.jpg" alt="VYW 뮤즈 — 라일락 헤어의 소녀가 빛나는 파편을 감싸쥔" class="absolute inset-0 w-full h-full object-cover object-[center_30%]">
+                <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#120D17]/85 via-transparent to-transparent"></div>
+            </div>
+            <div class="p-7 md:p-10">
+                <div class="flex items-baseline gap-4 mb-6">
+                    <span class="bb-num-ghost text-5xl md:text-6xl">04</span>
+                    <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">뮤즈 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">muse</span></h2>
+                </div>
+                <p class="text-sm text-vyw-glass/85 leading-relaxed mb-7">흰 피부의 소녀. 얼굴은 고정되어 있다. 특정 모델의 특정 얼굴이 브랜드 전 Fragment를 관통한다.</p>
+                <div class="space-y-5">
+                    <div>
+                        <div class="bb-label mb-1.5">Expression</div>
+                        <p class="text-sm text-vyw-glass/80 leading-relaxed">시선은 카메라 밖으로. 입은 살짝 벌어지거나 힘이 없는 상태. 감정은 읽히지 않는다.</p>
+                    </div>
+                    <div>
+                        <div class="bb-label mb-1.5">Posture</div>
+                        <p class="text-sm text-vyw-glass/80 leading-relaxed">긴장도 이완도 아닌 중간. 여기 있긴 한데 여기 있는 것 같지 않은 몸.</p>
+                    </div>
+                    <div>
+                        <div class="bb-label mb-1.5">Role</div>
+                        <p class="text-sm text-vyw-glass/80 leading-relaxed">세계의 중심이 아니라 세계의 관찰자. 파편 너머를 본다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 05 GENRE -->
+    <section id="genre" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-6">
+                <span class="bb-num-ghost text-5xl md:text-6xl">05</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">장르 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">genre</span></h2>
+            </div>
+            <p class="text-sm text-vyw-glass/85 mb-5 leading-relaxed">일본 빈티지 서브컬처의 여섯 장르. 공통 DNA는 <strong class="text-vyw-white font-medium">위태로운 연약함</strong>.</p>
+            <div class="flex flex-wrap gap-2">
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">러블리갸루</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">로리타</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">스나계</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">양산형</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">지뢰계</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-vyw-pink/12 border border-vyw-pink/30 text-vyw-pink text-sm">러블리펑크</span>
+            </div>
+            <div class="mt-8">
+                <div class="bb-label mb-3">Reference Brands</div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">엑시즈팜</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">리즈리사</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">앙크루즈</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">트랄라라</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">매드펑크</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">노에미</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">로지타</span>
+                    <span class="px-3 py-1 rounded-full border border-vyw-glass/20 text-vyw-glass/75 text-xs">버블즈</span>
+                </div>
+            </div>
+            <div class="mt-8">
+                <div class="bb-label mb-2">Design Line</div>
+                <p class="text-sm text-vyw-glass/80 leading-relaxed">과장된 코스튬 로리타·무대 의상이 아닌 <strong class="text-vyw-white font-medium">데일리로 입을 수 있는 선</strong>을 지킨다. 기준점은 위 레퍼런스 브랜드들의 실제 시판 라인.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 06 PRINCIPLES -->
+    <section id="principles" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-7">
+                <span class="bb-num-ghost text-5xl md:text-6xl">06</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">원칙 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">principles</span></h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="rounded-xl border border-vyw-pink/25 bg-vyw-pink/5 p-6">
+                    <h4 class="bb-label text-vyw-pink mb-4">✓ DO</h4>
+                    <ul class="text-sm text-vyw-glass/85 space-y-2 leading-relaxed">
+                        <li>무릎·미디 길이 드레스</li>
+                        <li>포인트로 프릴·리본 한두 곳</li>
+                        <li>빈티지 잡지 편집 룩</li>
+                        <li>팔레트 안에서 색 고르기</li>
+                        <li>모든 룩에 크롬 파편 하나</li>
+                        <li>부드러운 분산광, 그림자 최소</li>
+                        <li>필름 질감, 약한 그레인</li>
+                        <li>정면·측면 고정 카메라</li>
+                        <li>중립 표정, 시선 회피</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
+                    <h4 class="bb-label text-red-300/90 mb-4">✗ DON'T</h4>
+                    <ul class="text-sm text-vyw-glass/85 space-y-2 leading-relaxed">
+                        <li>바닥 끌리는 드레스·3단 페티코트</li>
+                        <li>전신 프릴·리본 10개 이상</li>
+                        <li>코스프레 인상, 무대 의상</li>
+                        <li>비비드·형광·쨍한 색</li>
+                        <li>판타지 은하수·별가루 장식</li>
+                        <li>강한 콘트라스트, 하드 섀도우</li>
+                        <li>디지털 클린 룩</li>
+                        <li>광각 로우앵글, 플로팅 앵글</li>
+                        <li>귀여운 포즈, 과장된 표정</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bb-label mt-9 mb-3">연출 규격 · Subject &amp; Setting</div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="rounded-xl border border-vyw-pink/25 bg-vyw-pink/5 p-6">
+                    <h4 class="bb-label text-vyw-pink mb-4">✓ CORE · 코어 연출 규격</h4>
+                    <ul class="text-sm text-vyw-glass/85 space-y-3 leading-relaxed">
+                        <li><strong class="text-vyw-white font-medium">단일 모델의 일관성</strong> — 18~23세의 사실적인 동양인 여성. 인형풍·애니풍을 배제한 서정적 리얼리즘.</li>
+                        <li><strong class="text-vyw-white font-medium">시선의 고정</strong> — 크리스털을 쥐되 그것을 보지 않고, 멍하게 카메라 바깥을 응시.</li>
+                        <li><strong class="text-vyw-white font-medium">지연된 정서 (그리워하다 만)</strong> — 극적인 표정 없이 살짝 벌어진 무덤덤한 입매.</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
+                    <h4 class="bb-label text-red-300/90 mb-4">✗ AVOID · 절대 금지 조항</h4>
+                    <ul class="text-sm text-vyw-glass/85 space-y-3 leading-relaxed">
+                        <li><strong class="text-red-300/90 font-medium">인공 광택 금지</strong> — 인위적 반짝이 필터, 세공된 보석, 실버·골드 크롬 장식.</li>
+                        <li><strong class="text-red-300/90 font-medium">정오의 빛 금지</strong> — 정오 직사광 및 고대비 하드 섀도우 전면 배제.</li>
+                        <li><strong class="text-red-300/90 font-medium">CGI 느낌 배제</strong> — 매끈한 클린 룩 방지를 위해 90년대 필름 마이크로 노이즈 강제.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 07 LOOKBOOK -->
+    <section id="lookbook" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-7">
+                <span class="bb-num-ghost text-5xl md:text-6xl">07</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">룩북 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">lookbook</span></h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 md:gap-10">
+                <div class="space-y-2">
+                    <div class="bb-label">Space</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">밝은 단색 배경. 흰·옅은 핑크·옅은 라일락 중 Fragment에 따라 선택. 혹은 인형의 방·창가·화장대 같은 <strong class="text-vyw-white font-medium">데일리 공간</strong>. 소품으로 스토리를 암시.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Props</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">시든 꽃, 빛바랜 리본, 오래된 인형, 연분홍 도자기, 유리 구체, 크롬 액세서리, 종이 엽서. 반드시 <strong class="text-vyw-white font-medium">크롬 파편 하나 이상</strong>.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Lighting</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">부드러운 분산광. 피부와 레이스 질감이 살되 그림자는 눅어지게. 정오의 하드라이트 금지.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Post</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">채도 살짝 낮춤. 약한 필름 그레인. 순흑 블랙 리프트. 아날로그 잡지 에디토리얼 톤.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 08 SYSTEM -->
+    <section id="system" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-7">
+                <span class="bb-num-ghost text-5xl md:text-6xl">08</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">운영 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">system</span></h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 md:gap-10">
+                <div class="space-y-2">
+                    <div class="bb-label">Format</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">룩북 중심의 비주얼·콘텐츠 프로젝트. SNS·인스타·룩북으로 공개. 옷은 AI로 생성되며, 실물 제작·판매는 현 단계에서 진행하지 않는다.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Season</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">S/S·F/W 체계 사용 안 함. <strong class="text-vyw-white font-medium">Fragment</strong> 단위로 발매하며 시점은 준비가 될 때. 각 Fragment는 부제를 가진다.</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <div class="bb-label mb-3">Naming</div>
+                <div class="rounded-xl border border-vyw-glass/15 bg-black/20 p-5 font-mono text-sm text-vyw-glass/85 leading-loose">
+                    VYW · Fragment 01 · Afar<br>
+                    VYW · Fragment 02 · ···<br>
+                    VYW · Fragment 03 · ···
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FRAGMENT 01 배너 ===== -->
+    <section id="fragment-01" class="bb-section reveal scroll-mt-32 pt-6">
+        <div class="relative rounded-2xl overflow-hidden border border-vyw-glass/15 text-center py-16 md:py-20 px-6">
+            <div class="absolute inset-0" style="background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(74,63,92,0.65), rgba(18,13,23,0.9) 75%);"></div>
+            <div class="relative space-y-3">
+                <div class="font-mono text-[11px] tracking-[0.5em] text-vyw-cool uppercase">VYW · Fragment 01</div>
+                <div class="font-serif text-5xl md:text-6xl text-vyw-pink font-semibold">Afar</div>
+                <div class="text-vyw-glass/70 tracking-[0.4em] text-sm">먼 곳</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fragment 01 상세 -->
+    <section class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="bb-label mb-3">Fragment · 01 — the first fragment</div>
+            <blockquote class="pl-5 border-l-2 border-vyw-pink/60 font-serif italic text-vyw-glass text-base md:text-lg leading-relaxed mb-8">
+                뮤즈는 처음으로 파편을 들여다본다.<br>
+                파편 속에는 먼 곳이 있다. 닿지 않는 곳. 기억인지 꿈인지 모르는 곳.
+            </blockquote>
+            <div class="grid md:grid-cols-2 gap-6 md:gap-10">
+                <div class="space-y-2">
+                    <div class="bb-label">Subject</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">"멀리 있는 것"에 대한 관찰. 뮤즈가 파편을 통해 보는 장면은 닿을 수 없는 따뜻한 세계. 뮤즈는 그 세계의 바깥에 있다.</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="bb-label">Mood</div>
+                    <p class="text-sm text-vyw-glass/80 leading-relaxed">그리움과 무표정이 공존. 파편 너머의 빛을 보지만 감정은 드러나지 않는다. 거리감이 핵심.</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <div class="bb-label mb-3">Palette Focus</div>
+                <div class="flex h-8 rounded-lg overflow-hidden border border-vyw-glass/15">
+                    <div style="flex:3; background:#EAC6D5;"></div>
+                    <div style="flex:3; background:#F3ECEE;"></div>
+                    <div style="flex:1.5; background:#C1C1CD;"></div>
+                    <div style="flex:1; background:#9B8FB0;"></div>
+                </div>
+                <p class="text-xs text-vyw-glass/60 mt-3">파우더 핑크와 입김 화이트를 중심으로. 차가운 라일락은 포인트로만.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 09 AI PROMPT -->
+    <section id="ai-prompt" class="bb-section reveal scroll-mt-32">
+        <div class="magazine-card rounded-2xl p-7 md:p-10">
+            <div class="flex items-baseline gap-4 mb-7">
+                <span class="bb-num-ghost text-5xl md:text-6xl">09</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-pink font-semibold">AI 프롬프트 가이드 <span class="font-mono text-xs text-vyw-glass/40 tracking-[0.3em] uppercase ml-1 align-middle">ai prompt</span></h2>
+            </div>
+            <p class="text-sm text-vyw-glass/85 mb-6 leading-relaxed">AI 이미지 생성 시 매 프롬프트에 다음 네 요소가 반드시 포함된다.</p>
+            <ul class="space-y-3 mb-8">
+                <li class="flex gap-4 items-start"><span class="font-mono text-vyw-pink text-sm shrink-0">01</span><span class="text-sm text-vyw-glass/80 leading-relaxed">레퍼런스 브랜드명 또는 장르 (Liz Lisa / Ank Rouge / casual sweet lolita / everyday hime gyaru)</span></li>
+                <li class="flex gap-4 items-start"><span class="font-mono text-vyw-pink text-sm shrink-0">02</span><span class="text-sm text-vyw-glass/80 leading-relaxed">데일리 가능 표현 (wearable / casual / everyday / knee-length)</span></li>
+                <li class="flex gap-4 items-start"><span class="font-mono text-vyw-pink text-sm shrink-0">03</span><span class="text-sm text-vyw-glass/80 leading-relaxed">VYW 톤 필터 (washed-out, muted, faded, film grain, 1990s editorial)</span></li>
+                <li class="flex gap-4 items-start"><span class="font-mono text-vyw-pink text-sm shrink-0">04</span><span class="text-sm text-vyw-glass/80 leading-relaxed">크롬 파편 (small chrome orb / liquid chrome accessory / metallic pebble)</span></li>
+            </ul>
+            <div class="bb-label mb-3">Fragment 01 · Afar — Prompt Sample</div>
+            <div class="rounded-xl border border-vyw-glass/15 bg-black/30 p-5 font-mono text-[13px] text-vyw-glass/75 leading-relaxed">
+                Young white girl, pale skin, soft blonde hair, wearing a <span class="text-vyw-pink">knee-length powder pink dress</span> with subtle lace at collar and sleeves, small ribbon at chest, ankle socks, mary jane shoes. <span class="text-vyw-pink">Liz Lisa style, casual sweet lolita, wearable everyday.</span> Soft pastel background, muted color palette of powder pink #EAC6D5 and cold lilac #9B8FB0. <span class="text-vyw-pink">Small liquid chrome orb floating beside her.</span> <span class="text-vyw-pink">Analog film grain, washed-out tones, 1990s Japanese fashion magazine editorial.</span> Neutral expression, gaze off-camera, soft diffused lighting.
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ========== FOOTER ========== -->
+<footer class="relative z-10 border-t border-vyw-glass/10 py-14 text-center bg-vyw-charcoal/30">
+    <div class="font-serif text-xl tracking-[0.2em] text-vyw-pink mb-3">VYW</div>
+    <p class="font-mono text-[11px] tracking-[0.3em] text-vyw-glass/45 uppercase mb-6">Brand Bible · Vol. 01</p>
+    <div class="flex items-center justify-center gap-5 text-[11px] tracking-[0.18em] uppercase">
+        <a href="index.html" class="text-vyw-glass/70 hover:text-white transition-colors">← 홈</a>
+        <span class="text-vyw-glass/25">·</span>
+        <a href="lookbook.html" class="text-vyw-glass/70 hover:text-white transition-colors">Lookbook Generator →</a>
+    </div>
+</footer>
+
+<script>
+    // 스크롤 리빌
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    // 목차 활성 하이라이트
+    const tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+    const spy = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+            if (e.isIntersecting) {
+                const id = e.target.id;
+                tocLinks.forEach((a) => a.classList.toggle('active', a.dataset.target === id));
+            }
+        });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('.bb-section[id]').forEach((s) => spy.observe(s));
+</script>
+
+</body>
+</html>

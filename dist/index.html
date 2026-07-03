@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VYW — Beyond the fragment</title>
+<meta name="description" content="VYW · Analog vintage lookbook system — 위태로운 연약함을 증류한 일본 서브컬처 룩북 프로젝트.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<meta property="og:title" content="VYW — Beyond the fragment">
+<meta property="og:description" content="위태로운 연약함을 증류한 일본 빈티지 서브컬처 룩북 프로젝트.">
+<meta property="og:image" content="assets/main-mood.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="brand.css">
+</head>
+<body>
+
+<!-- cosmic background layers -->
+<div class="cosmic-bg" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<!-- ✨ VYW twinkling white stars (bright x2, scrolls with page) -->
+<div class="vyw-stars" aria-hidden="true"></div>
+<style>
+.vyw-stars{position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;z-index:40}
+.vyw-stars::before,.vyw-stars::after{content:"";position:absolute;top:0;left:0;border-radius:50%;background:transparent}
+.vyw-stars::before{width:2.5px;height:2.5px;box-shadow:154px 1291px 0 #FFFFFF, 154px 1291px 4px #FFFFFF, 173px 795px 0 #FFFFFF, 173px 795px 4px #FFFFFF, 1285px 659px 0 #FFFFFF, 1285px 659px 4px #FFFFFF, 1356px 733px 0 #FFFFFF, 1356px 733px 4px #FFFFFF, 1875px 409px 0 #FFFFFF, 1875px 409px 4px #FFFFFF, 946px 53px 0 #FFFFFF, 946px 53px 4px #FFFFFF, 1719px 734px 0 #FFFFFF, 1719px 734px 4px #FFFFFF, 1413px 754px 0 #FFFFFF, 1413px 754px 4px #FFFFFF, 1411px 648px 0 #FFFFFF, 1411px 648px 4px #FFFFFF, 654px 631px 0 #FFFFFF, 654px 631px 4px #FFFFFF, 37px 110px 0 #FFFFFF, 37px 110px 4px #FFFFFF, 837px 113px 0 #FFFFFF, 837px 113px 4px #FFFFFF, 988px 243px 0 #FFFFFF, 988px 243px 4px #FFFFFF, 1543px 894px 0 #FFFFFF, 1543px 894px 4px #FFFFFF, 1741px 1031px 0 #FFFFFF, 1741px 1031px 4px #FFFFFF, 372px 831px 0 #FFFFFF, 372px 831px 4px #FFFFFF, 453px 1267px 0 #FFFFFF, 453px 1267px 4px #FFFFFF, 685px 419px 0 #FFFFFF, 685px 419px 4px #FFFFFF, 1520px 915px 0 #FFFFFF, 1520px 915px 4px #FFFFFF, 75px 666px 0 #FFFFFF, 75px 666px 4px #FFFFFF, 876px 721px 0 #FFFFFF, 876px 721px 4px #FFFFFF, 1623px 308px 0 #FFFFFF, 1623px 308px 4px #FFFFFF, 1110px 5px 0 #FFFFFF, 1110px 5px 4px #FFFFFF, 1534px 421px 0 #FFFFFF, 1534px 421px 4px #FFFFFF, 1742px 128px 0 #FFFFFF, 1742px 128px 4px #FFFFFF, 397px 77px 0 #FFFFFF, 397px 77px 4px #FFFFFF, 1848px 1157px 0 #FFFFFF, 1848px 1157px 4px #FFFFFF, 472px 340px 0 #FFFFFF, 472px 340px 4px #FFFFFF, 937px 1082px 0 #FFFFFF, 937px 1082px 4px #FFFFFF, 1148px 706px 0 #FFFFFF, 1148px 706px 4px #FFFFFF, 679px 1032px 0 #FFFFFF, 679px 1032px 4px #FFFFFF, 707px 1189px 0 #FFFFFF, 707px 1189px 4px #FFFFFF, 1725px 492px 0 #FFFFFF, 1725px 492px 4px #FFFFFF, 1042px 715px 0 #FFFFFF, 1042px 715px 4px #FFFFFF, 1463px 137px 0 #FFFFFF, 1463px 137px 4px #FFFFFF, 1735px 1083px 0 #FFFFFF, 1735px 1083px 4px #FFFFFF, 1588px 86px 0 #FFFFFF, 1588px 86px 4px #FFFFFF, 484px 1132px 0 #FFFFFF, 484px 1132px 4px #FFFFFF, 694px 397px 0 #FFFFFF, 694px 397px 4px #FFFFFF, 652px 914px 0 #FFFFFF, 652px 914px 4px #FFFFFF, 1653px 29px 0 #FFFFFF, 1653px 29px 4px #FFFFFF, 418px 595px 0 #FFFFFF, 418px 595px 4px #FFFFFF, 1690px 1125px 0 #FFFFFF, 1690px 1125px 4px #FFFFFF, 349px 1103px 0 #FFFFFF, 349px 1103px 4px #FFFFFF, 1466px 648px 0 #FFFFFF, 1466px 648px 4px #FFFFFF, 1242px 480px 0 #FFFFFF, 1242px 480px 4px #FFFFFF, 378px 234px 0 #FFFFFF, 378px 234px 4px #FFFFFF, 1605px 674px 0 #FFFFFF, 1605px 674px 4px #FFFFFF, 325px 791px 0 #FFFFFF, 325px 791px 4px #FFFFFF, 1501px 41px 0 #FFFFFF, 1501px 41px 4px #FFFFFF;animation:vywTwk1 3s ease-in-out infinite}
+.vyw-stars::after{width:3.5px;height:3.5px;box-shadow:1380px 342px 0 #FFFFFF, 1380px 342px 8px #FFFFFF, 570px 1046px 0 #FFFFFF, 570px 1046px 8px #FFFFFF, 1094px 468px 0 #FFFFFF, 1094px 468px 8px #FFFFFF, 99px 1040px 0 #FFFFFF, 99px 1040px 8px #FFFFFF, 116px 716px 0 #FFFFFF, 116px 716px 8px #FFFFFF, 505px 179px 0 #FFFFFF, 505px 179px 8px #FFFFFF, 389px 1188px 0 #FFFFFF, 389px 1188px 8px #FFFFFF, 996px 807px 0 #FFFFFF, 996px 807px 8px #FFFFFF, 997px 182px 0 #FFFFFF, 997px 182px 8px #FFFFFF, 683px 147px 0 #FFFFFF, 683px 147px 8px #FFFFFF, 1107px 345px 0 #FFFFFF, 1107px 345px 8px #FFFFFF, 1317px 364px 0 #FFFFFF, 1317px 364px 8px #FFFFFF, 1719px 694px 0 #FFFFFF, 1719px 694px 8px #FFFFFF, 265px 1216px 0 #FFFFFF, 265px 1216px 8px #FFFFFF, 574px 699px 0 #FFFFFF, 574px 699px 8px #FFFFFF, 1200px 326px 0 #FFFFFF, 1200px 326px 8px #FFFFFF, 934px 896px 0 #FFFFFF, 934px 896px 8px #FFFFFF, 780px 1267px 0 #FFFFFF, 780px 1267px 8px #FFFFFF, 536px 378px 0 #FFFFFF, 536px 378px 8px #FFFFFF, 1127px 173px 0 #FFFFFF, 1127px 173px 8px #FFFFFF;animation:vywTwk2 2s ease-in-out infinite}
+@keyframes vywTwk1{0%,100%{opacity:.85}50%{opacity:1}}
+@keyframes vywTwk2{0%,100%{opacity:.95}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.vyw-stars::before,.vyw-stars::after{animation:none;opacity:1}}
+</style>
+
+<!-- ========== HEADER ========== -->
+<header class="site-head">
+  <div class="inner">
+    <a href="index.html" class="wordmark" aria-label="VYW home"><img src="assets/logo-pink.png" alt="VYW"></a>
+    <nav class="nav">
+      <a href="brand-bible.html" class="hide-sm">Brand Bible</a>
+      <a href="lookbook.html">Lookbook</a>
+      <a href="#palette" class="hide-sm">Palette</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+  <!-- Real VYW logo mark (W + sparkle), white variant for the dark hero. -->
+  <img class="logo-mark" src="assets/logo-white.png" alt="VYW mark" width="120" height="92">
+
+  <div class="eyebrow">Analog Vintage Lookbook System</div>
+  <h1>Beyond<br>the fragment</h1>
+  <div class="sub-kr">위태로운 연약함</div>
+  <div class="sub-en">precarious fragility</div>
+</section>
+
+<!-- ========== MUSE / KEY VISUAL ========== -->
+<section class="muse reveal" aria-label="VYW muse">
+  <img class="muse-img" src="assets/main-mood.jpg" alt="라일락 헤어의 뮤즈가 빛나는 파편을 감싸쥔 메인 비주얼" loading="lazy">
+  <div class="muse-cap">
+    <div class="num">MUSE · 뮤즈</div>
+    <p>유리 너머의 빛을 손에 쥔 그녀. 깨질 듯 연약하지만, 끝내 부서지지 않는.</p>
+  </div>
+</section>
+
+<!-- ========== ENTRY / NAV ========== -->
+<section class="band wrap" id="enter">
+  <div class="section-head reveal">
+    <div class="num">ENTER · 들어가기</div>
+    <h2>스튜디오 <span class="en">studio</span></h2>
+    <p>브랜드의 세계관을 읽고, 룩북을 직접 생성한다. 두 개의 문.</p>
+  </div>
+
+  <div class="cards">
+    <!-- Lookbook generator (main feature) -->
+    <a class="card card--img card--lookbook reveal" href="lookbook.html">
+      <span class="tag">AI · GEMINI</span>
+      <h3>Lookbook Generator</h3>
+      <div class="ko">룩북 제너레이터</div>
+      <p>장르·포즈·배경·조명을 조합하면 VYW 코어 미학이 강제 적용된 90년대 빈티지 매거진 톤의 화보가 생성된다. Imagen 4.0 · Gemini 2.5 듀얼 엔진.</p>
+      <span class="go">생성 시작 <span class="arrow">→</span></span>
+    </a>
+
+    <!-- Brand bible -->
+    <a class="card card--img card--bible reveal" href="brand-bible.html">
+      <span class="tag outline">DOC · VOL.01</span>
+      <h3>Brand Bible</h3>
+      <div class="ko">브랜드 바이블</div>
+      <p>코어, 세계관, 팔레트, 뮤즈, 장르, 원칙, 룩북 운영, 그리고 첫 번째 파편 「Afar」까지. VYW의 모든 시각 규격을 담은 문서.</p>
+      <span class="go">읽기 <span class="arrow">→</span></span>
+    </a>
+
+    <!-- Wardrobe (local-only backend tool) -->
+    <div class="card disabled reveal" aria-disabled="true">
+      <span class="tag outline">LOCAL TOOL</span>
+      <h3>Wardrobe v0.3</h3>
+      <div class="ko">가먼트 제너레이터</div>
+      <p>pollinations · flux 기반 플랫레이/디테일/개별 아이템 생성기. Express 백엔드가 필요해 로컬에서만 작동한다 — <code>npm start</code> 후 사용.</p>
+      <span class="go">로컬 전용</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PALETTE ========== -->
+<section class="band wrap" id="palette">
+  <div class="section-head reveal">
+    <div class="num">03 · 팔레트</div>
+    <h2>브랜드 컬러 <span class="en">palette</span></h2>
+    <p>다섯 색. 모두 한 번 바랜 듯한 톤. 순수한 검정·순백·선명한 색은 들어오는 순간 세계가 깨진다.</p>
+  </div>
+
+  <div class="palette">
+    <div class="swatch reveal">
+      <div class="chip" style="background:#EAC6D5"></div>
+      <div class="meta">
+        <div class="name">파우더 핑크</div>
+        <div class="hex">#EAC6D5</div>
+        <div class="desc">메인. 일상적 따뜻함과 부드러움.</div>
+      </div>
+    </div>
+    <div class="swatch reveal">
+      <div class="chip" style="background:#D4CCDD"></div>
+      <div class="meta">
+        <div class="name">글래스 라일락</div>
+        <div class="hex">#D4CCDD</div>
+        <div class="desc">파편의 빛. 유리 너머의 색.</div>
+      </div>
+    </div>
+    <div class="swatch reveal">
+      <div class="chip" style="background:#9B8FB0"></div>
+      <div class="meta">
+        <div class="name">차가운 라일락</div>
+        <div class="hex">#9B8FB0</div>
+        <div class="desc">공기의 색. 아련함의 핵심.</div>
+      </div>
+    </div>
+    <div class="swatch reveal">
+      <div class="chip" style="background:#4A3F5C"></div>
+      <div class="meta">
+        <div class="name">딥 라일락</div>
+        <div class="hex">#4A3F5C</div>
+        <div class="desc">그림자. 포인트 어둠.</div>
+      </div>
+    </div>
+    <div class="swatch reveal">
+      <div class="chip" style="background:#F3ECEE"></div>
+      <div class="meta">
+        <div class="name">입김 화이트</div>
+        <div class="hex">#F3ECEE</div>
+        <div class="desc">여백. 피부와 부드러운 빛.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="site-foot">
+  <div class="mark">VYW</div>
+  <div class="line">Beyond the fragment · Creative mood board engine</div>
+</footer>
+
+<script>
+  // scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+
+</body>
+</html>

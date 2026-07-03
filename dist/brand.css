@@ -1,0 +1,393 @@
+/* =========================================================
+   VYW · Brand Design System
+   Beyond the fragment — analog vintage lookbook system
+   Derived from the Figma brand guide + VYW Brand Bible.
+   ========================================================= */
+
+/* ---------- Fonts ----------
+   Pretendard        = body / UI + Korean display fallback.
+   Hahmlet SemiBold  = display / titles (wordmark, hero, section heads). 명조 세리프,
+   한글+라틴 모두 지원. 룩북·바이블과 동일한 제목 폰트로 사이트 전체 통일(자체 호스팅 woff2).
+   (히스토리: 예전엔 Mulish 산세리프를 썼으나 Hahmlet으로 일원화.) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap');
+@font-face {
+  font-family: 'Hahmlet';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local('Hahmlet SemiBold'), local('Hahmlet-SemiBold'),
+       url('assets/fonts/Hahmlet-SemiBold.woff2') format('woff2');
+}
+
+/* ========================================================= */
+:root {
+  /* ----- Brand palette (Figma + Bible) ----- */
+  --pink:    #EAC6D5;   /* Powder Pink  — 메인, 일상적 따뜻함 */
+  --glass:   #D4CCDD;   /* Glass Lilac  — 파편의 빛, 유리 너머 */
+  --cool:    #9B8FB0;   /* Cool Lilac   — 공기의 색, 아련함의 핵심 */
+  --deep:    #4A3F5C;   /* Deep Lilac   — 그림자, 포인트 어둠 */
+  --dawn:    #5D5573;   /* Dawn Purple  — 회보라, 텍스트/로고 */
+  --white:   #F3ECEE;   /* Breath White — 여백, 피부, 부드러운 빛 */
+  --chrome:  #C1C1CD;   /* Flowing Chrome — 액체 금속, 서명 */
+  --peach:   #E8C9B5;   /* Pale Peach   — 보조 악센트 */
+
+  /* ----- Dark cosmic base (from vyw lookbook) ----- */
+  --base:      #120D17;
+  --charcoal:  #1A1420;
+  --dark:      #2D2536;
+
+  /* ----- Functional ----- */
+  --text:        var(--white);
+  --text-soft:   rgba(243, 236, 238, 0.66);
+  --text-mute:   rgba(243, 236, 238, 0.40);
+  --line:        rgba(212, 204, 221, 0.14);
+  --line-strong: rgba(212, 204, 221, 0.28);
+  --card-bg:     rgba(45, 37, 54, 0.40);
+
+  /* ----- Type ----- */
+  --ff-sans:    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+  --ff-display: 'Hahmlet', 'Pretendard Variable', Pretendard, serif;
+  --ff-mono:    'JetBrains Mono', Menlo, monospace;
+
+  /* ----- Motion ----- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========================================================= */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--ff-sans);
+  font-weight: 300;
+  color: var(--text);
+  background: var(--base);
+  line-height: 1.7;
+  font-size: 15px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Cosmic background ----------
+   Real nebula key-art (assets/mood-bg-3.jpg) darkened under palette
+   gradients so foreground text stays legible. The drifting orbs
+   (::before/::after) add motion on top. */
+.cosmic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(1200px 700px at 18% -8%,  rgba(234, 198, 213, 0.16), transparent 60%),
+    radial-gradient(1000px 800px at 88% 12%,  rgba(155, 143, 176, 0.18), transparent 62%),
+    radial-gradient(1400px 900px at 50% 118%, rgba(74, 63, 92, 0.55),    transparent 60%),
+    linear-gradient(rgba(18, 13, 23, 0.74), rgba(18, 13, 23, 0.88)),
+    url("assets/mood-bg-3.jpg") center top / cover no-repeat,
+    var(--base);
+}
+/* soft drifting orbs */
+.cosmic-bg::before,
+.cosmic-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.18;
+  animation: drift 16s infinite ease-in-out;
+}
+.cosmic-bg::before {
+  width: 38rem; height: 38rem; top: -8rem; left: -8rem;
+  background: var(--pink);
+}
+.cosmic-bg::after {
+  width: 40rem; height: 40rem; top: 28%; right: -10rem;
+  background: var(--cool);
+  animation-delay: -7s;
+}
+/* fine grain overlay — the "1990s film editorial" texture */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1);     opacity: 0.16; }
+  50%      { transform: translate(2rem, -1.5rem) scale(1.08); opacity: 0.26; }
+}
+
+/* ========================================================= */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+/* ---------- Header ---------- */
+.site-head {
+  position: sticky; top: 0; z-index: 30;
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  background: rgba(18, 13, 23, 0.55);
+}
+.site-head .inner {
+  max-width: 1180px; margin: 0 auto; padding: 18px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.wordmark {
+  display: inline-flex; align-items: center;
+  text-decoration: none;
+  transition: opacity 0.3s var(--ease);
+}
+.wordmark img { height: 30px; width: auto; display: block; }
+.wordmark:hover { opacity: 0.78; }
+.nav { display: flex; align-items: center; gap: 26px; }
+.nav a {
+  font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-soft); text-decoration: none;
+  transition: color 0.3s var(--ease);
+}
+.nav a:hover { color: var(--white); }
+@media (max-width: 640px) { .nav a.hide-sm { display: none; } }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 130px 28px 96px;
+  max-width: 960px; margin: 0 auto;
+}
+.hero .logo-mark {
+  width: 116px; height: auto; margin: 0 auto 40px; display: block;
+  filter: drop-shadow(0 8px 34px rgba(234, 198, 213, 0.28));
+  animation: logo-float 7s var(--ease) infinite;
+}
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
+.hero .eyebrow {
+  font-family: var(--ff-mono);
+  font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--cool);
+  margin-bottom: 30px;
+}
+.hero h1 {
+  font-family: var(--ff-display);
+  font-weight: 600; font-style: normal;
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  line-height: 1.06;
+  letter-spacing: 0.01em;
+  color: var(--white);
+}
+.hero .sub-kr {
+  margin-top: 34px;
+  font-size: 1.15rem; font-weight: 300;
+  letter-spacing: 0.16em;
+  color: var(--glass);
+}
+.hero .sub-en {
+  margin-top: 12px;
+  font-family: var(--ff-mono);
+  font-size: 0.72rem; letter-spacing: 0.42em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+/* ---------- Muse / key visual ---------- */
+.muse {
+  position: relative;
+  max-width: 1180px;
+  margin: 8px auto 40px;
+  padding: 0 28px;
+}
+.muse-img {
+  display: block;
+  width: 100%;
+  height: clamp(320px, 56vh, 600px);
+  object-fit: cover;
+  object-position: center 28%;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  /* fade the photo edges into the dark cosmic base */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 78%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 78%, transparent);
+}
+.muse-cap {
+  position: absolute;
+  left: 56px; bottom: 40px; right: 56px;
+  max-width: 40ch;
+}
+.muse-cap .num {
+  font-family: var(--ff-mono);
+  font-size: 0.66rem; letter-spacing: 0.42em;
+  color: var(--glass);
+  margin-bottom: 12px;
+}
+.muse-cap p {
+  font-family: var(--ff-display);
+  font-style: normal;
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+  line-height: 1.4;
+  color: var(--white);
+  text-shadow: 0 2px 24px rgba(18, 13, 23, 0.85);
+}
+@media (max-width: 640px) {
+  .muse-cap { left: 30px; right: 30px; bottom: 26px; }
+}
+
+/* ---------- Section scaffolding ---------- */
+section.band { padding: 80px 0; }
+.section-head { margin-bottom: 44px; }
+.section-head .num {
+  font-family: var(--ff-mono);
+  font-size: 0.68rem; letter-spacing: 0.42em;
+  color: var(--text-mute);
+  margin-bottom: 14px;
+}
+.section-head h2 {
+  font-family: var(--ff-display);
+  font-weight: 400; font-size: 1.9rem; letter-spacing: 0.03em;
+  color: var(--pink);
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.section-head h2 .en {
+  font-family: var(--ff-mono);
+  font-size: 0.74rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+.section-head p {
+  margin-top: 16px; max-width: 56ch;
+  color: var(--text-soft); font-size: 0.95rem;
+}
+
+/* ---------- Entry / nav cards ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+.card {
+  position: relative;
+  display: flex; flex-direction: column;
+  min-height: 280px;
+  padding: 30px 30px 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: transform 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+.card::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(420px 200px at 80% -10%, rgba(234, 198, 213, 0.18), transparent 70%);
+  opacity: 0; transition: opacity 0.5s var(--ease);
+  pointer-events: none;
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--line-strong);
+  box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+}
+.card:hover::after { opacity: 1; }
+
+.card .tag {
+  align-self: flex-start;
+  font-family: var(--ff-mono);
+  font-size: 0.6rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--dawn);
+  background: var(--pink);
+  padding: 5px 11px; border-radius: 999px;
+  margin-bottom: auto;
+}
+.card .tag.outline {
+  background: transparent;
+  color: var(--cool);
+  border: 1px solid var(--line-strong);
+}
+.card h3 {
+  font-family: var(--ff-display);
+  font-weight: 500; font-size: 1.5rem; letter-spacing: 0.02em;
+  color: var(--white);
+  margin-top: 28px;
+}
+.card .ko { margin-top: 6px; font-size: 0.82rem; color: var(--cool); letter-spacing: 0.08em; }
+.card p { margin-top: 14px; font-size: 0.86rem; color: var(--text-soft); line-height: 1.7; }
+.card .go {
+  margin-top: 22px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--ff-mono);
+  font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--pink);
+}
+.card .go .arrow { transition: transform 0.4s var(--ease); }
+.card:hover .go .arrow { transform: translateX(6px); }
+.card.disabled { pointer-events: none; opacity: 0.5; }
+
+/* entry cards with a mood photo behind the glass.
+   The element background sits behind all card content, so text
+   stays readable above the darkening gradient overlay. */
+.card--img { transition: transform 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease), background-size 0.6s var(--ease); }
+.card--lookbook {
+  background:
+    linear-gradient(150deg, rgba(45, 37, 54, 0.62), rgba(18, 13, 23, 0.88)),
+    url("assets/mood2.jpg") center / 130% no-repeat;
+}
+.card--bible {
+  background:
+    linear-gradient(150deg, rgba(45, 37, 54, 0.66), rgba(18, 13, 23, 0.90)),
+    url("assets/mood4.jpg") center 20% / 130% no-repeat;
+}
+.card--img:hover { background-size: 142%; }
+
+/* ---------- Palette ---------- */
+.palette {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+@media (max-width: 760px) { .palette { grid-template-columns: repeat(2, 1fr); } }
+
+.swatch {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+.swatch .chip { height: 132px; }
+.swatch .meta { padding: 16px 16px 18px; }
+.swatch .name { font-size: 0.92rem; color: var(--white); letter-spacing: 0.02em; }
+.swatch .hex { font-family: var(--ff-mono); font-size: 0.72rem; color: var(--cool); margin-top: 5px; }
+.swatch .desc { font-size: 0.74rem; color: var(--text-soft); margin-top: 10px; line-height: 1.6; }
+
+/* ---------- Footer ---------- */
+.site-foot {
+  border-top: 1px solid var(--line);
+  padding: 56px 28px 64px;
+  text-align: center;
+  background: rgba(18, 13, 23, 0.6);
+}
+.site-foot .mark {
+  font-family: var(--ff-display);
+  font-size: 1.2rem; letter-spacing: 0.26em; color: var(--pink);
+}
+.site-foot .line {
+  margin-top: 14px;
+  font-family: var(--ff-mono);
+  font-size: 0.66rem; letter-spacing: 0.34em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+/* ---------- Reveal on scroll ---------- */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmic-bg::before, .cosmic-bg::after { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

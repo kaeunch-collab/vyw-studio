@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VYW · Wardrobe v0.3</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="head">
+    <div class="head-left">
+      <div class="brand">VYW</div>
+      <div class="head-sub">wardrobe <span class="ver">v0.3</span></div>
+    </div>
+    <div class="head-right">
+      <div class="head-meta">garment generator</div>
+      <div class="head-meta muted">pollinations · flux</div>
+    </div>
+  </header>
+
+  <main class="split">
+
+    <!-- ========== LEFT · FORM ========== -->
+    <form id="form" class="pane-left">
+
+      <!-- 01 concept -->
+      <div class="block">
+        <div class="section-num">01</div>
+        <h2 class="section-title">컨셉 <span class="en">concept</span></h2>
+        <select id="fragmentKey" class="input select"></select>
+        <div id="customMoodWrap" class="sub-field" hidden>
+          <div class="label">mood · 자유 입력</div>
+          <textarea id="customMood" class="input" rows="3" placeholder="예) 폐가 정원, 노을이 지기 직전, 무감각한 시선..."></textarea>
+        </div>
+      </div>
+
+      <!-- 02 genre -->
+      <div class="block">
+        <div class="section-num">02</div>
+        <h2 class="section-title">장르 <span class="en">genre</span></h2>
+        <div id="genreOptions" class="radio-group"></div>
+      </div>
+
+      <!-- 03 palette -->
+      <div class="block">
+        <div class="section-num">03</div>
+        <h2 class="section-title">메인 색 <span class="en">palette</span></h2>
+
+        <div class="field">
+          <div class="label">주도색 · main</div>
+          <div class="color-row">
+            <select id="colorMain" class="input select"></select>
+            <span class="color-dot" id="colorMainDot"></span>
+          </div>
+          <div class="color-hint" id="colorMainHint" hidden>Fragment 기본값</div>
+          <input type="text" id="colorMainCustom" class="input sub-input" placeholder="색 이름 직접 입력" hidden>
+        </div>
+
+        <div class="field">
+          <div class="label">서브색 · sub</div>
+          <div class="color-row">
+            <select id="colorSub" class="input select"></select>
+            <span class="color-dot" id="colorSubDot"></span>
+          </div>
+          <div class="color-hint" id="colorSubHint" hidden>Fragment 기본값</div>
+          <input type="text" id="colorSubCustom" class="input sub-input" placeholder="색 이름 직접 입력" hidden>
+        </div>
+      </div>
+
+      <!-- 04 items -->
+      <div class="block">
+        <div class="section-num">04</div>
+        <h2 class="section-title">아이템 구성 <span class="en">items</span></h2>
+
+        <div class="toggle" id="outfitMode">
+          <button type="button" class="toggle-btn on" data-mode="dress">드레스</button>
+          <button type="button" class="toggle-btn" data-mode="topbottom">상의 + 하의</button>
+        </div>
+
+        <div id="slots" class="slots"></div>
+      </div>
+
+      <!-- 05 output -->
+      <div class="block">
+        <div class="section-num">05</div>
+        <h2 class="section-title">출력 형식 <span class="en">output</span></h2>
+        <div class="checkbox-group">
+          <label class="checkbox"><input type="checkbox" name="outputs" value="flatlay" checked><span>플랫레이</span></label>
+          <label class="checkbox"><input type="checkbox" name="outputs" value="detail"><span>디테일 클로즈업</span></label>
+          <label class="checkbox"><input type="checkbox" name="outputs" value="individual"><span>개별 아이템 컷</span></label>
+        </div>
+
+        <div id="detailFocusWrap" class="sub-field" hidden>
+          <div class="label">detail focus</div>
+          <select id="detailFocus" class="input select">
+            <option value="main_detail">드레스 디테일 (소매, 밑단 등)</option>
+            <option value="shoes_detail">신발 디테일</option>
+            <option value="bag_detail">가방 디테일</option>
+            <option value="jewelry_detail">주얼리 디테일</option>
+            <option value="fabric_texture">전체 섬유 텍스처</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 06 extra -->
+      <div class="block">
+        <div class="section-num">06</div>
+        <h2 class="section-title">추가 디테일 <span class="en">notes</span></h2>
+        <textarea id="extraDetails" class="input" rows="3" placeholder="예) 창가 자리에 앉아있음, 손에 크롬 오브 하나..."></textarea>
+      </div>
+
+      <div class="block action">
+        <button type="submit" id="generate">
+          <span class="btn-label">generate</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+    </form>
+
+    <!-- ========== RIGHT · RESULT ========== -->
+    <aside class="pane-right">
+
+      <div class="block">
+        <div class="section-num">R</div>
+        <h2 class="section-title">결과 <span class="en">result</span></h2>
+        <div id="status" class="status">아직 생성하지 않음</div>
+        <div id="results" class="results"></div>
+        <div id="errors" class="errors"></div>
+
+        <details id="promptDebug" class="prompt-debug" hidden>
+          <summary>final prompts</summary>
+          <div id="promptList"></div>
+        </details>
+      </div>
+
+      <div class="block">
+        <div class="section-num">A</div>
+        <h2 class="section-title">아카이브 <span class="en">archive</span></h2>
+        <div id="gallery" class="gallery"></div>
+        <div id="galleryEmpty" class="gallery-empty">아직 없음</div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <footer class="foot">VYW · WARDROBE · LOCAL TOOL</footer>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

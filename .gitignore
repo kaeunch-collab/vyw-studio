@@ -1,0 +1,31 @@
+node_modules/
+images/
+.env
+.DS_Store
+npm-debug.log*
+
+# Gemini API key (browser env) — never commit
+dist/env.js
+env.js
+
+# Firebase
+.firebase/
+firebase-debug.log*
+
+# Functions 로컬 시크릿 (절대 커밋 금지)
+functions/.secret.local
+functions/node_modules/
+
+# 로컬 도구 아티팩트 (공개 대상 아님)
+.claude/
+.superpowers/
+
+# 배포 임시/테스트 파일
+dist/_t_*.html
+
+# (선택) 생성 테스트 이미지 — 공개 원하면 이 줄 삭제
+비율_wrong/
+
+# 브랜드 이미지 원본 마스터 / 레퍼런스 (용량 큼 — 배포엔 dist/assets 웹버전만 필요, GitHub 제외)
+CSS/
+Reference/

@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYW — Beyond the fragment</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard (브랜드 표준 본문/디스플레이 폰트) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Custom Configuration for VYW Palette -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vyw: {
+                            pink: '#EAC6D5',      // Powder Pink
+                            glass: '#D4CCDD',     // Glass Lilac
+                            cool: '#9B8FB0',      // Cool Lilac
+                            deep: '#4A3F5C',      // Deep Lilac
+                            white: '#F3ECEE',     // Breath White
+                            chrome: '#C1C1CD',    // Flowing Chrome
+                            dark: '#2D2536',      // Dark Muted Charcoal
+                            charcoal: '#1A1420'   // Rich Deep Base
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard Variable', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        // 제목용 명조 세리프 (한글+라틴 모두 Hahmlet)
+                        serif: ['Hahmlet', 'Pretendard Variable', 'Pretendard', 'serif'],
+                        playfair: ['Hahmlet', 'Pretendard Variable', 'Pretendard', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 로컬 개발 시 .env 환경변수를 편리하게 대체하는 로컬 스크립트 파일 링크 -->
+    <script src="env.js" onerror="console.log('로컬 env.js 파일이 감지되지 않았습니다. UI 설정을 통해 API Key 입력이 가능합니다.')"></script>
+
+    <style>
+        /* Hahmlet SemiBold — 제목용 명조 세리프(한글+라틴 지원, 자체 호스팅). */
+        @font-face {
+            font-family: 'Hahmlet';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: local('Hahmlet SemiBold'), local('Hahmlet-SemiBold'),
+                 url('assets/fonts/Hahmlet-SemiBold.woff2') format('woff2');
+        }
+
+        body {
+            background-color: #120D17;
+            color: #F3ECEE;
+            font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-image: radial-gradient(circle at 50% 20%, #2A1F35 0%, #120D17 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1A1420; }
+        ::-webkit-scrollbar-thumb { background: #4A3F5C; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9B8FB0; }
+
+        .transition-all-custom { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .magazine-card {
+            background: rgba(45, 37, 54, 0.4);
+            border: 1px solid rgba(212, 204, 221, 0.15);
+            backdrop-filter: blur(16px);
+        }
+
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.3; }
+        }
+        .bg-pulse { animation: subtle-pulse 4s infinite ease-in-out; }
+
+        /* 뷰 전환 페이드 */
+        .view { animation: viewFade 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes viewFade {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 진입 카드 호버 */
+        .step-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .step-card:hover { transform: translateY(-6px); border-color: rgba(234, 198, 213, 0.55); }
+
+        /* 선택된 카드(콜라주/배경) 강조 */
+        .selectable.is-selected {
+            border-color: #EAC6D5 !important;
+            box-shadow: 0 0 0 2px rgba(234,198,213,0.45), 0 12px 32px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- 글로벌 배경 데코레이션 -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-vyw-pink/10 filter blur-[120px] bg-pulse"></div>
+        <div class="absolute top-1/3 -right-20 w-96 h-96 rounded-full bg-vyw-cool/15 filter blur-[150px] bg-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    
+<!-- ✨ VYW twinkling white stars (bright x2, scrolls with page) -->
+<div class="vyw-stars" aria-hidden="true"></div>
+<style>
+.vyw-stars{position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;z-index:40}
+.vyw-stars::before,.vyw-stars::after{content:"";position:absolute;top:0;left:0;border-radius:50%;background:transparent}
+.vyw-stars::before{width:2.5px;height:2.5px;box-shadow:154px 1291px 0 #FFFFFF, 154px 1291px 4px #FFFFFF, 173px 795px 0 #FFFFFF, 173px 795px 4px #FFFFFF, 1285px 659px 0 #FFFFFF, 1285px 659px 4px #FFFFFF, 1356px 733px 0 #FFFFFF, 1356px 733px 4px #FFFFFF, 1875px 409px 0 #FFFFFF, 1875px 409px 4px #FFFFFF, 946px 53px 0 #FFFFFF, 946px 53px 4px #FFFFFF, 1719px 734px 0 #FFFFFF, 1719px 734px 4px #FFFFFF, 1413px 754px 0 #FFFFFF, 1413px 754px 4px #FFFFFF, 1411px 648px 0 #FFFFFF, 1411px 648px 4px #FFFFFF, 37px 110px 0 #FFFFFF, 37px 110px 4px #FFFFFF, 837px 113px 0 #FFFFFF, 837px 113px 4px #FFFFFF, 988px 243px 0 #FFFFFF, 988px 243px 4px #FFFFFF, 1543px 894px 0 #FFFFFF, 1543px 894px 4px #FFFFFF, 1741px 1031px 0 #FFFFFF, 1741px 1031px 4px #FFFFFF, 372px 831px 0 #FFFFFF, 372px 831px 4px #FFFFFF, 453px 1267px 0 #FFFFFF, 453px 1267px 4px #FFFFFF, 685px 419px 0 #FFFFFF, 685px 419px 4px #FFFFFF, 1520px 915px 0 #FFFFFF, 1520px 915px 4px #FFFFFF, 75px 666px 0 #FFFFFF, 75px 666px 4px #FFFFFF, 876px 721px 0 #FFFFFF, 876px 721px 4px #FFFFFF, 1623px 308px 0 #FFFFFF, 1623px 308px 4px #FFFFFF, 1110px 5px 0 #FFFFFF, 1110px 5px 4px #FFFFFF, 1534px 421px 0 #FFFFFF, 1534px 421px 4px #FFFFFF, 1742px 128px 0 #FFFFFF, 1742px 128px 4px #FFFFFF, 397px 77px 0 #FFFFFF, 397px 77px 4px #FFFFFF, 1848px 1157px 0 #FFFFFF, 1848px 1157px 4px #FFFFFF, 472px 340px 0 #FFFFFF, 472px 340px 4px #FFFFFF, 937px 1082px 0 #FFFFFF, 937px 1082px 4px #FFFFFF, 1148px 706px 0 #FFFFFF, 1148px 706px 4px #FFFFFF, 679px 1032px 0 #FFFFFF, 679px 1032px 4px #FFFFFF, 707px 1189px 0 #FFFFFF, 707px 1189px 4px #FFFFFF, 1725px 492px 0 #FFFFFF, 1725px 492px 4px #FFFFFF, 1042px 715px 0 #FFFFFF, 1042px 715px 4px #FFFFFF, 1463px 137px 0 #FFFFFF, 1463px 137px 4px #FFFFFF, 1735px 1083px 0 #FFFFFF, 1735px 1083px 4px #FFFFFF, 1588px 86px 0 #FFFFFF, 1588px 86px 4px #FFFFFF, 484px 1132px 0 #FFFFFF, 484px 1132px 4px #FFFFFF, 694px 397px 0 #FFFFFF, 694px 397px 4px #FFFFFF, 652px 914px 0 #FFFFFF, 652px 914px 4px #FFFFFF, 1653px 29px 0 #FFFFFF, 1653px 29px 4px #FFFFFF, 418px 595px 0 #FFFFFF, 418px 595px 4px #FFFFFF, 1690px 1125px 0 #FFFFFF, 1690px 1125px 4px #FFFFFF, 349px 1103px 0 #FFFFFF, 349px 1103px 4px #FFFFFF, 1466px 648px 0 #FFFFFF, 1466px 648px 4px #FFFFFF, 1242px 480px 0 #FFFFFF, 1242px 480px 4px #FFFFFF, 378px 234px 0 #FFFFFF, 378px 234px 4px #FFFFFF, 1605px 674px 0 #FFFFFF, 1605px 674px 4px #FFFFFF, 325px 791px 0 #FFFFFF, 325px 791px 4px #FFFFFF, 1501px 41px 0 #FFFFFF, 1501px 41px 4px #FFFFFF;animation:vywTwk1 3s ease-in-out infinite}
+.vyw-stars::after{width:3.5px;height:3.5px;box-shadow:1380px 342px 0 #FFFFFF, 1380px 342px 8px #FFFFFF, 570px 1046px 0 #FFFFFF, 570px 1046px 8px #FFFFFF, 1094px 468px 0 #FFFFFF, 1094px 468px 8px #FFFFFF, 99px 1040px 0 #FFFFFF, 99px 1040px 8px #FFFFFF, 116px 716px 0 #FFFFFF, 116px 716px 8px #FFFFFF, 505px 179px 0 #FFFFFF, 505px 179px 8px #FFFFFF, 389px 1188px 0 #FFFFFF, 389px 1188px 8px #FFFFFF, 996px 807px 0 #FFFFFF, 996px 807px 8px #FFFFFF, 997px 182px 0 #FFFFFF, 997px 182px 8px #FFFFFF, 683px 147px 0 #FFFFFF, 683px 147px 8px #FFFFFF, 1107px 345px 0 #FFFFFF, 1107px 345px 8px #FFFFFF, 1317px 364px 0 #FFFFFF, 1317px 364px 8px #FFFFFF, 1719px 694px 0 #FFFFFF, 1719px 694px 8px #FFFFFF, 265px 1216px 0 #FFFFFF, 265px 1216px 8px #FFFFFF, 574px 699px 0 #FFFFFF, 574px 699px 8px #FFFFFF, 1200px 326px 0 #FFFFFF, 1200px 326px 8px #FFFFFF, 934px 896px 0 #FFFFFF, 934px 896px 8px #FFFFFF, 780px 1267px 0 #FFFFFF, 780px 1267px 8px #FFFFFF, 536px 378px 0 #FFFFFF, 536px 378px 8px #FFFFFF, 1127px 173px 0 #FFFFFF, 1127px 173px 8px #FFFFFF;animation:vywTwk2 2s ease-in-out infinite}
+@keyframes vywTwk1{0%,100%{opacity:.85}50%{opacity:1}}
+@keyframes vywTwk2{0%,100%{opacity:.95}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.vyw-stars::before,.vyw-stars::after{animation:none;opacity:1}}
+</style>
+<!-- 헤더 -->
+    <header class="relative z-20 border-b border-vyw-glass/10 px-6 py-4 backdrop-blur-md bg-vyw-charcoal/40 sticky top-0">
+        <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center space-x-3">
+                <a href="#home" class="flex items-center hover:opacity-80 transition-opacity" aria-label="VYW home">
+                    <img src="assets/logo-pink.png" alt="VYW" class="h-7 w-auto">
+                </a>
+                <span class="h-4 w-[1px] bg-vyw-glass/20 hidden sm:block"></span>
+                <p class="text-[11px] text-vyw-glass/55 tracking-[0.28em] font-light hidden sm:block">LOOKBOOK STUDIO</p>
+            </div>
+
+            <!-- 단계 진행 네비 -->
+            <nav class="flex items-center gap-1 text-[11px] tracking-wider order-3 w-full md:order-2 md:w-auto justify-center">
+                <button onclick="navigate('home')" data-step="home" class="step-nav px-2.5 py-1 rounded-full transition-all"><i class="fa-solid fa-house text-[10px]"></i></button>
+                <span class="text-vyw-glass/30">·</span>
+                <button onclick="navigate('cloth')" data-step="cloth" class="step-nav px-3 py-1 rounded-full transition-all">① 옷 생성</button>
+                <i class="fa-solid fa-chevron-right text-[8px] text-vyw-glass/30"></i>
+                <button onclick="navigate('model')" data-step="model" class="step-nav px-3 py-1 rounded-full transition-all">② 모델 착장</button>
+                <i class="fa-solid fa-chevron-right text-[8px] text-vyw-glass/30"></i>
+                <button onclick="navigate('bg')" data-step="bg" class="step-nav px-3 py-1 rounded-full transition-all">③ 배경 삽입</button>
+            </nav>
+
+            <div class="flex items-center space-x-3 order-2 md:order-3">
+                <button onclick="openLoginModal()" class="flex items-center space-x-2 px-3 py-1.5 rounded-full border border-vyw-glass/20 text-xs text-vyw-glass hover:text-white hover:bg-vyw-cool/20 transition-all duration-300">
+                    <i class="fa-solid fa-lock"></i>
+                    <span id="api-status-text">로그인</span>
+                    <span id="api-status-indicator" class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                </button>
+                <a href="brand-bible.html" class="text-xs text-vyw-glass hover:text-white tracking-wider hidden sm:inline">브랜드 바이블</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 py-8 lg:py-12">
+
+        <!-- ============================================================ -->
+        <!-- VIEW: HOME (3-카드 랜딩)                                       -->
+        <!-- ============================================================ -->
+        <section id="view-home" class="view">
+
+            <!-- HERO: 뮤즈 이미지(원래 크기, 하단) + 머리 위 텍스트 -->
+            <section class="relative w-screen left-1/2 -translate-x-1/2 -mt-8 lg:-mt-12 mb-16 min-h-[92vh] overflow-hidden bg-[#120D17]">
+                <!-- 풀폭 배경: main-mood를 좌우·상단으로 확장(outpaint)한 단일 이미지. 합성이 없어 사각 박스·프린지 없이 인물이 배경에 그대로 녹아듦 -->
+                <img src="assets/main-mood-wide.jpg" alt="VYW 메인 비주얼 — 라일락 헤어의 뮤즈가 빛나는 파편을 감싸쥔"
+                     class="absolute inset-0 w-full h-full object-cover object-bottom">
+                <!-- 텍스트 가독성용 상단 어둠 -->
+                <div class="absolute inset-0 bg-gradient-to-b from-[#120D17]/55 via-[#120D17]/5 to-transparent"></div>
+                <!-- 텍스트: 상단(머리 위) -->
+                <div class="absolute inset-x-0 top-0 z-10 text-center px-6 pt-[6vh] md:pt-[7vh] space-y-4">
+                    <img src="assets/logo-white.png" alt="VYW" class="w-24 md:w-36 mx-auto drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]">
+                    <div class="font-mono text-[10px] md:text-[11px] tracking-[0.4em] text-vyw-glass/80 uppercase">Analog Vintage Lookbook</div>
+                    <h1 class="font-serif font-semibold text-white text-4xl md:text-6xl leading-[0.95] drop-shadow-lg">Beyond<br>the fragment</h1>
+                    <div class="space-y-1 pt-1">
+                        <div class="text-vyw-pink tracking-[0.35em] text-sm md:text-base drop-shadow-lg">위태로운 연약함</div>
+                        <div class="text-vyw-glass/70 tracking-[0.35em] text-[10px] md:text-[11px] font-mono uppercase drop-shadow">precarious fragility</div>
+                    </div>
+                </div>
+                <!-- CTA -->
+                <button onclick="scrollToEnter()" class="absolute bottom-9 left-1/2 -translate-x-1/2 z-20 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-vyw-pink/90 text-vyw-dark font-medium text-sm tracking-wider hover:bg-vyw-pink hover:scale-[1.03] active:scale-95 transition-all shadow-xl">
+                    스튜디오 들어가기 <i class="fa-solid fa-arrow-down text-xs"></i>
+                </button>
+                <div class="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#120D17] to-transparent pointer-events-none"></div>
+            </section>
+
+            <!-- ENTER: 스튜디오 입구 -->
+            <div id="enter" class="scroll-mt-24 text-center max-w-xl mx-auto mb-10 space-y-2">
+                <span class="font-mono text-[11px] text-vyw-cool tracking-[0.3em] block uppercase">Enter · 스튜디오</span>
+                <h2 class="font-serif text-2xl md:text-3xl text-vyw-white font-semibold tracking-wide">세 개의 문</h2>
+                <p class="text-sm text-vyw-glass/65 leading-relaxed">
+                    Fragment의 무드를 따라 <strong class="text-vyw-pink">옷</strong>을 짓고, <strong class="text-vyw-pink">모델</strong>에 입히고, <strong class="text-vyw-pink">배경</strong>을 더해 한 장의 화보를 완성합니다.
+                </p>
+            </div>
+
+            <!-- 3 카드 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 카드 1: 옷 생성 -->
+                <button onclick="navigate('cloth')" class="step-card magazine-card rounded-3xl overflow-hidden text-left flex flex-col group">
+                    <div class="relative h-44 bg-gradient-to-br from-vyw-pink/30 via-vyw-glass/15 to-vyw-charcoal flex items-center justify-center overflow-hidden">
+                        <img id="home-thumb-cloth" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" alt="">
+                        <img src="assets/icon-cloth.png" alt="옷 생성" class="relative z-10 h-32 w-auto object-contain drop-shadow-[0_4px_16px_rgba(155,143,176,0.5)] group-hover:scale-110 transition-transform">
+                        <span id="home-badge-cloth" class="absolute top-3 right-3 z-10 text-[10px] bg-vyw-charcoal/80 border border-vyw-pink/40 text-vyw-pink px-2 py-0.5 rounded-full hidden"></span>
+                    </div>
+                    <div class="p-6 space-y-2 flex-1 flex flex-col">
+                        <span class="font-mono text-[10px] text-vyw-cool tracking-widest">STEP 01</span>
+                        <h3 class="font-serif text-xl text-vyw-pink font-semibold">옷 생성</h3>
+                        <p class="text-xs text-vyw-glass/60 leading-relaxed flex-1">Fragment 주제와 장르를 골라 흰 배경 플랫레이 콜라주 한 벌을 생성합니다.</p>
+                        <span class="text-xs text-vyw-white/80 group-hover:text-vyw-pink transition-colors mt-2 inline-flex items-center gap-1">시작하기 <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </button>
+
+                <!-- 카드 2: 모델 착장 -->
+                <button onclick="navigate('model')" class="step-card magazine-card rounded-3xl overflow-hidden text-left flex flex-col group">
+                    <div class="relative h-44 bg-gradient-to-br from-vyw-cool/30 via-vyw-deep/20 to-vyw-charcoal flex items-center justify-center overflow-hidden">
+                        <img id="home-thumb-model" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" alt="">
+                        <img src="assets/icon-model.png" alt="모델 착장" class="relative z-10 h-32 w-auto object-contain drop-shadow-[0_4px_16px_rgba(155,143,176,0.5)] group-hover:scale-110 transition-transform">
+                        <span id="home-badge-model" class="absolute top-3 right-3 z-10 text-[10px] bg-vyw-charcoal/80 border border-vyw-pink/40 text-vyw-pink px-2 py-0.5 rounded-full hidden"></span>
+                    </div>
+                    <div class="p-6 space-y-2 flex-1 flex flex-col">
+                        <span class="font-mono text-[10px] text-vyw-cool tracking-widest">STEP 02</span>
+                        <h3 class="font-serif text-xl text-vyw-pink font-semibold">모델 착장</h3>
+                        <p class="text-xs text-vyw-glass/60 leading-relaxed flex-1">생성된 옷 카드를 고르고(선택: 모델 사진 업로드) 뮤즈에게 그 한 벌을 입힙니다.</p>
+                        <span class="text-xs text-vyw-white/80 group-hover:text-vyw-pink transition-colors mt-2 inline-flex items-center gap-1">입히기 <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </button>
+
+                <!-- 카드 3: 배경 삽입 -->
+                <button onclick="navigate('bg')" class="step-card magazine-card rounded-3xl overflow-hidden text-left flex flex-col group">
+                    <div class="relative h-44 bg-gradient-to-br from-vyw-deep/40 via-vyw-cool/15 to-vyw-charcoal flex items-center justify-center overflow-hidden">
+                        <img id="home-thumb-bg" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" alt="">
+                        <img src="assets/icon-bg.png" alt="배경 삽입" class="relative z-10 h-32 w-auto object-contain drop-shadow-[0_4px_16px_rgba(155,143,176,0.5)] group-hover:scale-110 transition-transform">
+                        <span id="home-badge-bg" class="absolute top-3 right-3 z-10 text-[10px] bg-vyw-charcoal/80 border border-vyw-pink/40 text-vyw-pink px-2 py-0.5 rounded-full hidden"></span>
+                    </div>
+                    <div class="p-6 space-y-2 flex-1 flex flex-col">
+                        <span class="font-mono text-[10px] text-vyw-cool tracking-widest">STEP 03</span>
+                        <h3 class="font-serif text-xl text-vyw-pink font-semibold">배경 삽입</h3>
+                        <p class="text-xs text-vyw-glass/60 leading-relaxed flex-1">기본 스튜디오 배경을 고르거나(선택: 직접 업로드) 착장 컷에 합성해 마무리합니다.</p>
+                        <span class="text-xs text-vyw-white/80 group-hover:text-vyw-pink transition-colors mt-2 inline-flex items-center gap-1">합성하기 <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VIEW: CLOTH (옷 생성)                                         -->
+        <!-- ============================================================ -->
+        <section id="view-cloth" class="view hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- 컨트롤 -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="flex items-center gap-2 text-vyw-glass/70 text-xs tracking-widest">
+                    <span class="font-mono text-vyw-cool">STEP 01</span> · 옷 생성
+                </div>
+
+                <!-- Fragment 선택 -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide flex items-center">
+                        <i class="fa-solid fa-gem mr-2 text-sm"></i> Fragment 주제
+                    </h3>
+                    <div id="fragment-selectors" class="grid grid-cols-1 gap-2"></div>
+
+                    <!-- Fragment 무드 비주얼 (레퍼런스 무드 사진 + 팔레트 틴트 + 키워드) -->
+                    <div id="fragment-mood" class="relative rounded-xl overflow-hidden border border-vyw-glass/15 h-48 transition-all-custom">
+                        <img id="fragment-mood-img" class="absolute inset-0 w-full h-full object-cover" alt="fragment mood">
+                        <div id="fragment-mood-tint" class="absolute inset-0"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/30"></div>
+                        <div class="absolute inset-0 p-4 flex flex-col justify-between">
+                            <div class="flex gap-1.5" id="fragment-mood-dots"></div>
+                            <div class="space-y-1.5">
+                                <div id="fragment-mood-name" class="font-serif text-vyw-white text-sm tracking-wide drop-shadow-lg"></div>
+                                <div class="flex flex-wrap gap-1.5" id="fragment-mood-keywords"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p id="fragment-desc" class="text-[11px] text-vyw-glass/60 leading-relaxed border-t border-vyw-glass/10 pt-3"></p>
+                </div>
+
+                <!-- 장르 선택 -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide flex items-center">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-2 text-sm"></i> 장르 / 코디 스타일
+                    </h3>
+                    <div id="genre-selectors" class="grid grid-cols-1 gap-2"></div>
+                </div>
+
+                <!-- 생성 엔진 선택 -->
+                <div class="magazine-card rounded-2xl p-5 space-y-3">
+                    <label class="text-xs text-vyw-glass/80 tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-sm"></i> 생성 엔진
+                    </label>
+                    <div class="engine-selectors grid grid-cols-2 gap-2"></div>
+                    <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                </div>
+
+                <!-- 생성 버튼 -->
+                <button onclick="generateClothing()" class="w-full bg-gradient-to-r from-vyw-deep via-vyw-cool to-vyw-pink text-vyw-white font-serif font-semibold tracking-widest py-4 px-6 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 text-sm">
+                    <i class="fa-solid fa-shirt"></i>
+                    <span>옷 콜라주 생성</span>
+                </button>
+                <p id="cloth-engine-label" class="text-[10px] text-center text-vyw-glass/40 font-mono tracking-wider -mt-2">POLLINATIONS · FLUX · FREE</p>
+            </div>
+
+            <!-- 결과 갤러리 -->
+            <div class="lg:col-span-8 space-y-4">
+                <div class="magazine-card rounded-2xl p-6 min-h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center border-b border-vyw-glass/10 pb-3 mb-4">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-images mr-2 text-sm"></i> 생성된 옷 카드
+                        </h3>
+                        <span id="cloth-count" class="text-[10px] text-vyw-glass/50 font-mono tracking-wider">0 벌</span>
+                    </div>
+
+                    <div id="cloth-empty" class="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+                        <div class="w-16 h-16 rounded-full bg-vyw-deep/40 flex items-center justify-center text-vyw-pink border border-vyw-glass/10">
+                            <i class="fa-solid fa-hanger text-xl"></i>
+                        </div>
+                        <p class="text-xs text-vyw-glass/60 leading-relaxed max-w-xs">
+                            Fragment와 장르를 고르고 <span class="text-vyw-pink">옷 콜라주 생성</span>을 누르면, 옷_ref 스타일의 흰 배경 플랫레이 한 벌이 카드로 쌓입니다.
+                        </p>
+                    </div>
+
+                    <div id="cloth-gallery" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="navigate('model')" class="px-6 py-3 rounded-xl border border-vyw-pink/40 text-vyw-pink hover:bg-vyw-pink/10 transition-all text-sm tracking-wider flex items-center gap-2">
+                        다음: 모델 착장 <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VIEW: MODEL (모델 착장)                                       -->
+        <!-- ============================================================ -->
+        <section id="view-model" class="view hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- 컨트롤 -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center gap-2 text-vyw-glass/70 text-xs tracking-widest">
+                    <span class="font-mono text-vyw-cool">STEP 02</span> · 모델 착장
+                </div>
+
+                <!-- 옷 카드 선택 -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-shirt mr-2 text-sm"></i> 입힐 옷 선택
+                        </h3>
+                        <span class="text-[10px] text-vyw-pink">필수</span>
+                    </div>
+                    <div id="model-cloth-picker" class="grid grid-cols-3 gap-3"></div>
+                    <div id="model-cloth-empty" class="text-center py-6 space-y-3 hidden">
+                        <p class="text-xs text-vyw-glass/60">아직 생성된 옷이 없습니다.</p>
+                        <button onclick="navigate('cloth')" class="text-xs text-vyw-pink hover:underline">← 옷 생성하러 가기</button>
+                    </div>
+                </div>
+
+                <!-- 모델 사진 업로드 (선택) -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-image mr-2 text-sm"></i> 모델 사진
+                        </h3>
+                        <span class="text-[10px] bg-vyw-deep/60 px-2 py-0.5 rounded text-vyw-pink">선택</span>
+                    </div>
+                    <p class="text-xs text-vyw-glass/60 leading-relaxed">
+                        업로드하면 그 인물의 얼굴·체형을 참조합니다. 없으면 VYW 기본 뮤즈로 생성됩니다.
+                    </p>
+                    <div id="model-dropzone" class="border-2 border-dashed border-vyw-glass/30 rounded-xl h-32 flex flex-col items-center justify-center cursor-pointer hover:border-vyw-pink/80 hover:bg-vyw-deep/10 transition-all relative overflow-hidden">
+                        <input type="file" id="model-file-input" class="hidden" accept="image/*">
+                        <div id="model-dropzone-prompt" class="text-center text-xs text-vyw-glass/70 space-y-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg text-vyw-glass"></i>
+                            <p>모델 사진 드래그 또는 클릭</p>
+                        </div>
+                        <img id="model-preview" class="absolute inset-0 w-full h-full object-cover hidden" src="" alt="model preview">
+                        <button onclick="clearModelRef(event)" id="model-remove" class="absolute top-2 right-2 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center text-xs text-white hover:bg-red-500 hidden z-10">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 포즈 선택 -->
+                <div class="magazine-card rounded-2xl p-6 space-y-3">
+                    <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                        <i class="fa-solid fa-person mr-2 text-sm"></i> 모델 포즈
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2" id="pose-selectors"></div>
+                    <input type="hidden" id="selected-pose">
+
+                    <!-- 포즈 사진 직접 업로드 (선택) -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <span class="h-[1px] flex-1 bg-vyw-glass/10"></span>
+                        <span class="text-[10px] text-vyw-glass/50 tracking-wider">또는 포즈 사진 업로드</span>
+                        <span class="h-[1px] flex-1 bg-vyw-glass/10"></span>
+                    </div>
+                    <div id="pose-dropzone" class="border-2 border-dashed border-vyw-glass/30 rounded-xl h-28 flex flex-col items-center justify-center cursor-pointer hover:border-vyw-pink/80 hover:bg-vyw-deep/10 transition-all relative overflow-hidden">
+                        <input type="file" id="pose-file-input" class="hidden" accept="image/*">
+                        <div id="pose-dropzone-prompt" class="text-center text-xs text-vyw-glass/70 space-y-1">
+                            <i class="fa-solid fa-person-rays text-lg text-vyw-glass"></i>
+                            <p>포즈 참고 사진 드래그 또는 클릭</p>
+                        </div>
+                        <img id="pose-preview" class="absolute inset-0 w-full h-full object-contain bg-vyw-charcoal hidden" src="" alt="pose ref">
+                        <button onclick="clearPoseRef(event)" id="pose-remove" class="absolute top-2 right-2 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center text-xs text-white hover:bg-red-500 hidden z-10">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-vyw-glass/45 leading-relaxed">업로드하면 그 사진의 <strong>자세</strong>를 따라합니다. ※ 포즈 사진 반영은 <strong>Google AI(키)</strong> 엔진에서만 동작합니다.</p>
+                </div>
+
+                <!-- 생성 엔진 -->
+                <div class="magazine-card rounded-2xl p-5 space-y-3">
+                    <label class="text-xs text-vyw-glass/80 tracking-wider flex items-center gap-2"><i class="fa-solid fa-microchip text-sm"></i> 생성 엔진</label>
+                    <div class="engine-selectors grid grid-cols-2 gap-2"></div>
+                    <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                </div>
+
+                <button onclick="generateDressed()" class="w-full bg-gradient-to-r from-vyw-deep via-vyw-cool to-vyw-pink text-vyw-white font-serif font-semibold tracking-widest py-4 px-6 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 text-sm">
+                    <i class="fa-solid fa-person-dress"></i>
+                    <span>모델에게 착장하기</span>
+                </button>
+                <p id="model-engine-label" class="text-[10px] text-center text-vyw-glass/40 font-mono tracking-wider -mt-4">GEMINI 2.5 FLASH · IMAGE TO IMAGE</p>
+            </div>
+
+            <!-- 착장 결과 -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="magazine-card rounded-2xl p-6 min-h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center border-b border-vyw-glass/10 pb-3 mb-4">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-camera mr-2 text-sm"></i> 착장 결과
+                        </h3>
+                        <button onclick="downloadResult(state.dressedDataUrl, 'VYW-dressed')" id="model-download" class="opacity-50 pointer-events-none bg-vyw-charcoal/80 border border-vyw-glass/20 p-2 rounded-lg text-xs hover:text-vyw-pink hover:opacity-100 transition-all" title="저장">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center bg-vyw-charcoal/40 rounded-xl overflow-hidden border border-vyw-glass/5 p-4 min-h-[400px]">
+                        <div id="model-placeholder" class="text-center p-8 max-w-sm space-y-4">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-vyw-deep/40 flex items-center justify-center text-vyw-pink border border-vyw-glass/10">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                            </div>
+                            <p class="text-xs text-vyw-glass/60 leading-relaxed">옷 카드를 고르고 착장 버튼을 누르면, 그 한 벌을 입은 VYW 뮤즈가 중립 배경 위에 연출됩니다.</p>
+                        </div>
+                        <img id="model-output" src="" class="max-w-full max-h-[560px] object-contain rounded-lg shadow-2xl border border-vyw-glass/25 hidden" alt="dressed model">
+                    </div>
+                </div>
+                <div class="flex justify-between">
+                    <button onclick="navigate('cloth')" class="px-5 py-3 rounded-xl border border-vyw-glass/20 text-vyw-glass hover:text-white hover:border-vyw-glass/40 transition-all text-sm tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left text-[11px]"></i> 옷 생성
+                    </button>
+                    <button onclick="navigate('bg')" class="px-6 py-3 rounded-xl border border-vyw-pink/40 text-vyw-pink hover:bg-vyw-pink/10 transition-all text-sm tracking-wider flex items-center gap-2">
+                        다음: 배경 삽입 <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VIEW: BG (배경 삽입)                                          -->
+        <!-- ============================================================ -->
+        <section id="view-bg" class="view hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- 컨트롤 -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center gap-2 text-vyw-glass/70 text-xs tracking-widest">
+                    <span class="font-mono text-vyw-cool">STEP 03</span> · 배경 삽입
+                </div>
+
+                <!-- 기본 스튜디오 배경 -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                        <i class="fa-solid fa-palette mr-2 text-sm"></i> 기본 스튜디오 배경
+                    </h3>
+                    <div id="bg-selectors" class="grid grid-cols-1 gap-2"></div>
+                </div>
+
+                <!-- 배경 업로드 (선택) -->
+                <div class="magazine-card rounded-2xl p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-image mr-2 text-sm"></i> 배경 업로드
+                        </h3>
+                        <span class="text-[10px] bg-vyw-deep/60 px-2 py-0.5 rounded text-vyw-pink">선택</span>
+                    </div>
+                    <p class="text-xs text-vyw-glass/60 leading-relaxed">직접 배경 이미지를 올리면 기본 배경 대신 이 장면에 인물을 합성합니다.</p>
+                    <div id="bg-dropzone" class="border-2 border-dashed border-vyw-glass/30 rounded-xl h-32 flex flex-col items-center justify-center cursor-pointer hover:border-vyw-pink/80 hover:bg-vyw-deep/10 transition-all relative overflow-hidden">
+                        <input type="file" id="bg-file-input" class="hidden" accept="image/*">
+                        <div id="bg-dropzone-prompt" class="text-center text-xs text-vyw-glass/70 space-y-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg text-vyw-glass"></i>
+                            <p>배경 사진 드래그 또는 클릭</p>
+                        </div>
+                        <img id="bg-preview" class="absolute inset-0 w-full h-full object-cover hidden" src="" alt="bg preview">
+                        <button onclick="clearBgRef(event)" id="bg-remove" class="absolute top-2 right-2 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center text-xs text-white hover:bg-red-500 hidden z-10">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 생성 엔진 -->
+                <div class="magazine-card rounded-2xl p-5 space-y-3">
+                    <label class="text-xs text-vyw-glass/80 tracking-wider flex items-center gap-2"><i class="fa-solid fa-microchip text-sm"></i> 생성 엔진</label>
+                    <div class="engine-selectors grid grid-cols-2 gap-2"></div>
+                    <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                </div>
+
+                <button onclick="generateFinal()" class="w-full bg-gradient-to-r from-vyw-deep via-vyw-cool to-vyw-pink text-vyw-white font-serif font-semibold tracking-widest py-4 px-6 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 text-sm">
+                    <i class="fa-solid fa-mountain-sun"></i>
+                    <span>배경 합성하기</span>
+                </button>
+                <p id="bg-engine-label" class="text-[10px] text-center text-vyw-glass/40 font-mono tracking-wider -mt-4">GEMINI 2.5 FLASH · COMPOSITE</p>
+            </div>
+
+            <!-- 최종 결과 -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="magazine-card rounded-2xl p-6 min-h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center border-b border-vyw-glass/10 pb-3 mb-4">
+                        <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                            <i class="fa-solid fa-photo-film mr-2 text-sm"></i> 최종 룩북 컷
+                        </h3>
+                        <button onclick="downloadResult(state.finalDataUrl, 'VYW-lookbook')" id="bg-download" class="opacity-50 pointer-events-none bg-vyw-charcoal/80 border border-vyw-glass/20 p-2 rounded-lg text-xs hover:text-vyw-pink hover:opacity-100 transition-all" title="저장">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center bg-vyw-charcoal/40 rounded-xl overflow-hidden border border-vyw-glass/5 p-4 min-h-[400px]">
+                        <div id="bg-placeholder" class="text-center p-8 max-w-sm space-y-4">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-vyw-deep/40 flex items-center justify-center text-vyw-pink border border-vyw-glass/10">
+                                <i class="fa-solid fa-sparkles text-xl"></i>
+                            </div>
+                            <p id="bg-placeholder-text" class="text-xs text-vyw-glass/60 leading-relaxed">먼저 모델 착장을 완료한 뒤 배경을 골라 합성하세요.</p>
+                            <button onclick="navigate('model')" id="bg-goto-model" class="text-xs text-vyw-pink hover:underline hidden">← 모델 착장하러 가기</button>
+                        </div>
+                        <img id="bg-output" src="" class="max-w-full max-h-[560px] object-contain rounded-lg shadow-2xl border border-vyw-glass/25 hidden" alt="final lookbook">
+                    </div>
+                </div>
+                <div class="flex justify-between">
+                    <button onclick="navigate('model')" class="px-5 py-3 rounded-xl border border-vyw-glass/20 text-vyw-glass hover:text-white hover:border-vyw-glass/40 transition-all text-sm tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left text-[11px]"></i> 모델 착장
+                    </button>
+                    <button onclick="navigate('home')" class="px-6 py-3 rounded-xl border border-vyw-pink/40 text-vyw-pink hover:bg-vyw-pink/10 transition-all text-sm tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-house text-[11px]"></i> 처음으로
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="border-t border-vyw-glass/10 py-8 px-6 text-center text-xs text-vyw-glass/40 relative z-10 bg-vyw-charcoal/80 mt-8">
+        <p class="font-playfair tracking-[0.2em] mb-2">VYW · Beyond the fragment</p>
+        <p class="font-sans">옷 생성 · 모델 착장 · 배경 삽입 — VYW 코어 미학 가드레일 상시 적용.</p>
+    </footer>
+
+    <!-- 모달: API Key 설정 -->
+    <div id="api-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="magazine-card max-w-md w-full mx-4 rounded-2xl p-6 border border-vyw-pink/30 space-y-4">
+            <div class="flex justify-between items-center border-b border-vyw-glass/15 pb-2">
+                <h3 class="font-serif text-lg text-vyw-pink font-semibold tracking-wide">
+                    <i class="fa-solid fa-lock mr-2"></i> 로그인
+                </h3>
+                <button onclick="closeLoginModal()" class="text-vyw-glass hover:text-white text-lg">&times;</button>
+            </div>
+            <p class="text-xs text-vyw-glass/70 leading-relaxed">
+                비밀번호를 입력하면 Google AI(Gemini) 생성 기능이 열립니다. 실제 API 키는 서버에만 있고 브라우저로 전송되지 않습니다.
+                (무료 엔진은 로그인 없이 사용 가능)
+            </p>
+            <div class="space-y-1">
+                <label class="text-[10px] uppercase text-vyw-glass/60 tracking-wider">비밀번호</label>
+                <input type="password" id="input-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" class="w-full bg-vyw-charcoal border border-vyw-glass/30 rounded-xl px-4 py-3 text-sm text-vyw-white focus:outline-none focus:border-vyw-pink">
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="doLogin()" class="flex-1 bg-vyw-pink text-vyw-dark font-semibold py-2.5 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-sm">로그인</button>
+                <button onclick="doLogout()" class="px-4 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-xs">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 전역 로딩 오버레이 -->
+    <div id="global-loading" class="fixed inset-0 bg-vyw-charcoal/95 backdrop-blur-sm z-[60] flex-col items-center justify-center hidden" style="display:none;">
+        <div class="relative w-24 h-24 mb-4">
+            <div class="absolute inset-0 rounded-full border-4 border-vyw-glass/20 border-t-vyw-pink animate-spin"></div>
+            <div class="absolute inset-3 rounded-full border-4 border-vyw-pink/10 border-b-vyw-cool animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+        </div>
+        <h4 class="font-serif text-vyw-pink text-sm tracking-widest mb-1 animate-pulse">아날로그 에디토리얼 현상 중...</h4>
+        <p id="loading-sub" class="text-[11px] text-vyw-glass/60">VYW 코어 미학 규칙을 강제 적용하는 중입니다.</p>
+    </div>
+
+    <!-- 토스트 -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[70] max-w-[340px] transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="magazine-card border border-vyw-pink/40 px-5 py-3 rounded-xl flex items-start space-x-2 shadow-2xl">
+            <span id="toast-icon" class="text-vyw-pink text-sm mt-0.5 shrink-0"></span>
+            <p id="toast-text" class="text-xs text-vyw-white font-medium leading-relaxed"></p>
+        </div>
+    </div>
+
+    <script>
+        /* ====================================================================
+           VYW Lookbook Studio — 옷 생성 → 모델 착장 → 배경 삽입
+        ==================================================================== */
+
+        // ---------- 브랜드 마스터 프롬프트 상수 ----------
+        const brandCoreSubject = "A photograph of a young East Asian girl (18-23 years old), highly realistic and natural looking face with exquisite details, never stylized, never doll-like or anime-like, smooth skin with light porcelain tone. Her hair is long, colored in soft pastel lilac and light lavender. Her expression is completely emotionless, neutral, eyes filled with mysterious depth looking away from the camera, lips slightly parted and completely relaxed, never smiling, radiating a fragile vulnerability.";
+        const brandCoreObjects = "She is gently cradling a single small raw, unpolished, rough natural lavender amethyst crystal in her palm, looking slightly past it with deep serene detachment. No polished gems, no cut jewelry.";
+        const brandCorePalette = "Strict color palette of muted powder pink (#EAC6D5), misty glass lilac (#D4CCDD), cool muted lilac (#9B8FB0), deep rich lilac (#4A3F5C), and soft breath white (#F3ECEE). Never include black, neon, warm golds, or bright silvers.";
+        const brandCorePost = "Muted saturation, extremely subtle film grain texture, analog style 1990s Japanese fashion magazine editorial photograph tone, low contrast with soft black lift, no harsh shadows, organic analog photographic feel, completely avoiding digital CGI look.";
+
+        // ---------- Fragment 데이터 (config/concepts.json 기준 3종) ----------
+        const fragments = {
+            afar: {
+                label: 'Fragment 01 · Afar — 먼 곳',
+                desc: '닿지 않는 먼 곳에 대한 관조. 그리움과 무표정이 공존하고 거리감이 핵심. 파우더 핑크·입김 화이트 중심, 차가운 라일락은 포인트로만.',
+                mood: 'distant, dreamlike, a faded memory, soft longing, washed-out tones, diffused pastel lighting, quiet contemplative distance',
+                palette: brandCorePalette,
+                genres: ['lolita_sweet', 'lolita_casual', 'yosanke', 'lovely_gyaru_toned'],
+                image: 'assets/mood2.jpg',
+                tintFrom: '#EAC6D5', tintTo: '#F3ECEE',
+                dots: ['#EAC6D5', '#F3ECEE', '#9B8FB0'],
+                keywords: ['먼 곳', '그리움', '관조', '꿈결']
+            },
+            elsewhere: {
+                label: 'Fragment 02 · Elsewhere — 여기가 아닌 어딘가',
+                desc: '이탈과 소외, 어긋남. 여기 있어야 할 내가 아니라는 감각. 회보라·차콜 톤의 차갑고 어긋난 분위기.',
+                mood: 'cold detached atmosphere, slightly off-kilter composition, a sense of being displaced and out of place, stark lighting with long shadows, emotional distance, uncomfortable silence, desaturated',
+                palette: 'Color palette centred on muted grey-purple (#5D5573) and soft charcoal grey (#404040), with cool lilac (#9B8FB0) accents and breath white (#F3ECEE) highlights. Muted and desaturated; never pure black, never neon or warm gold.',
+                genres: ['sunakei', 'jirai_kei', 'dark_lolita', 'lovely_punk_toned'],
+                image: 'assets/mood3.jpg',
+                tintFrom: '#5D5573', tintTo: '#404040',
+                dots: ['#5D5573', '#404040', '#9B8FB0', '#F3ECEE'],
+                keywords: ['이탈', '소외', '어긋남', '차가운 거리감']
+            },
+            faraway: {
+                label: 'Fragment 03 · Faraway — 멀리 있는',
+                desc: '향수와 동화, 잃어버린 시간. 한때 있었던 곳을 기억함. 크림·더스티 로즈의 바랜 따뜻함.',
+                mood: 'nostalgic warm fading light, golden-hour remnants, memory-like softness, dreamy vintage texture, faded sunlight through curtains, aged photograph quality, gentle sepia undertones',
+                palette: 'Color palette centred on faded cream (#F0E6D2) and dusty rose (#C08081), softened with powder pink (#EAC6D5) and breath white (#F3ECEE). Gently aged and sun-faded, muted not saturated; never neon.',
+                genres: ['classic_lolita', 'fairy_grunge', 'lovely_gyaru_vintage', 'country_lolita'],
+                image: 'assets/mood4.jpg',
+                tintFrom: '#C08081', tintTo: '#F0E6D2',
+                dots: ['#F0E6D2', '#C08081', '#EAC6D5'],
+                keywords: ['향수', '동화', '잃어버린 시간', '바램']
+            }
+        };
+
+        // ---------- 장르(코디) 데이터 (config/concepts.json 기준 12종) ----------
+        const genres = {
+            lolita_sweet: { label: '스위트 로리타', desc: 'sweet lolita fashion, Angelic Pretty and BABY THE STARS SHINE BRIGHT brand aesthetic, bell-shaped skirt with petticoat volume, multi-tiered ruffles, dense eyelet lace trim, puff sleeves with lace cuffs, satin bow on chest, knee-high lace socks, mary jane platform shoes, bonnet or bow headdress, cotton candy silhouette, ornate sugary detail' },
+            lolita_casual: { label: '캐주얼 로리타', desc: 'casual lolita, Liz Lisa and Tralala brand style himekei, knee-length A-line skirt with layered tiered ruffle hem, peter pan collar blouse, puff sleeves, cherry or strawberry embroidery, dense eyelet lace trim, satin ribbon bows on chest and waist, scalloped hem, mary jane shoes, large hair ribbon, soft romantic Harajuku sweet' },
+            yosanke: { label: '양산형', desc: 'yosanke fashion, Noemie brand aesthetic, Japanese school-uniform inspired, pleated mini skirt, sailor or ribbon-tie blouse, thigh-high or knee-high white socks, chunky mary jane loafers, heart-shaped bag, velvet ribbon choker, pastel hair clips with charms, soft curled side-swept bangs, Shibuya fragile cutesy girl' },
+            lovely_gyaru_toned: { label: '러블리갸루 (톤다운)', desc: 'lovely gyaru toned down, Ank Rouge brand aesthetic mature sweet, layered chiffon tiered mini skirt, lace blouse with bell sleeves, velvet ribbon choker, pearl buttons, vintage rose embroidery, floral print mixed with solid panels, ankle boots with satin ribbon ties, mini handbag with ornate charms, dusty mauve and rose gold accents' },
+            sunakei: { label: '스나계', desc: 'sunakei sad-core subculture fashion, late-90s Harajuku street, oversized vintage band t-shirt layered under pinafore jumper dress, tartan plaid mini skirt, fishnet tights layered under knee socks, platform Dr. Martens chunky boots, silver ear cuffs and choker, messy twin tails with black ribbons, Milk and MILKBOY brand inspired, emotional distance baggy cool' },
+            jirai_kei: { label: '지뢰계', desc: 'jirai kei menhera fashion, black lace dress with heavy pink ribbon trim, multi-tiered frilly skirt, white blouse with oversized bow, platform loafers with ribbon, knee-high black socks, choker with heart or syringe pendant, bandage-style arm warmers, twin tails with black and pink ribbons, fragile unstable doll-girl aesthetic, black-pink-white palette only' },
+            dark_lolita: { label: '다크 로리타', desc: 'dark gothic lolita, Moi-même-Moitié and Alice and the Pirates brand aesthetic, black velvet long-sleeve dress with tiered lace skirt, white lace jabot and cuffs, pearl choker with black velvet ribbon, silver cross pendant, rose motif brooch, black bonnet with veil, lace-up platform boots, Victorian mourning elegance, antique silver details' },
+            lovely_punk_toned: { label: '러블리펑크 (톤다운)', desc: 'lovely punk toned down, MAD PUNK brand aesthetic girly punk hybrid, tartan check mini skirt, distressed band tee or black lace blouse, subtle stud belt, safety pin and pin badge details, layered fishnet stockings, platform boots with buckles, chain belt with charms, faded tartan red-pink and black, Harajuku 90s punk revival' },
+            classic_lolita: { label: '클래식 로리타', desc: 'classic lolita, Mary Magdalene and Victorian Maiden and Axes Femme brand aesthetic, high-neck blouse with jabot frill, ankle-length A-line skirt in cream or dusty burgundy, pearl buttons, antique cotton lace cuffs, tarnished gold brooch and cameo, tea-party refined silhouette, lace-trimmed ankle socks, low-heel lace-up flats, aged ivory velvet trim' },
+            fairy_grunge: { label: '페어리 그런지', desc: 'fairy grunge aesthetic, Axes Femme shabby chic layered, vintage floral prairie dress over distressed moth-eaten cardigan, fine knit with holes, tulle skirt with faded denim layer, butterfly and mushroom hair clips, worn leather mary janes, tattered ribbon in braided hair, wildflower crown, cottagecore with melancholy, earthy muted palette with dusty pastels' },
+            lovely_gyaru_vintage: { label: '러블리갸루 (빈티지)', desc: 'vintage Y2K lovely gyaru, Rosita and Bubbles and Tralala brand aesthetic 2000s Shibuya, mini velour zip hoodie, rhinestone-trimmed tank top with butterfly motif, low-rise denim mini skirt with lace trim, aged pink tartan pattern, tinted oval sunglasses, chunky platform sandals, charm-laden mini purse, aged magazine print, washed nostalgic shine' },
+            country_lolita: { label: '컨트리 로리타', desc: 'country lolita pastoral, Innocent World brand aesthetic, gingham check apron pinafore over puff-sleeve blouse, straw boater hat with long ribbon, cotton floral print panels, lace-trimmed ankle socks, lace-up flats or mary janes, wicker basket bag, faded cream and sage prairie palette, braided hair with fabric ribbons, soft rural warmth' },
+        };
+
+        // ---------- 포즈 데이터 ----------
+        const posePresets = [
+            { id: 'pose-1', name: '정면 서기', icon: '🧍', desc: 'Standing straight and relaxed facing the camera, arms resting naturally at her sides, weight evenly balanced, the full outfit clearly visible, calm neutral posture' },
+            { id: 'pose-2', name: '단아한 손모음', icon: '🙌', desc: 'Standing upright, shoulders slightly relaxed, both hands clasped together gently in front near the waist, quiet elegant poise' },
+            { id: 'pose-3', name: '크리스털 들고', icon: '💎', desc: 'Standing, both hands gently cradling a single raw lavender amethyst crystal near her chest, eyes softly lowered towards it, serene expression' },
+            { id: 'pose-4', name: '돌아보는', icon: '🔄', desc: 'Three-quarter angle, body turned slightly away with shoulders in relaxed profile, head turned back over the shoulder looking past the camera' },
+            { id: 'pose-5', name: '걷는 포즈', icon: '🚶', desc: 'Walking towards the camera mid-stride, one foot stepping forward, natural relaxed motion, skirt gently flowing, full-length dynamic fashion walk' },
+            { id: 'pose-6', name: '앉은 포즈', icon: '🪑', desc: 'Sitting elegantly on a simple minimal stool, knees together and angled, hands resting softly on her lap, graceful upright posture, full outfit visible' },
+            { id: 'pose-7', name: '한 손 허리', icon: '💁', desc: 'Standing with one hand resting lightly on her hip and the other arm relaxed, weight shifted onto one leg, subtle confident editorial fashion pose' },
+            { id: 'pose-8', name: '손을 뺨에', icon: '🌸', desc: 'Standing, one hand gently raised near her cheek, head tilted softly to one side, delicate dreamy gesture with a gentle wistful expression' },
+            { id: 'pose-9', name: '뒷모습', icon: '🎀', desc: 'Seen from behind, standing and looking back over her shoulder toward the camera, showing the back detail of the dress, full-length view' }
+        ];
+
+        // ---------- 배경(세팅) 데이터 ----------
+        const backgrounds = {
+            default: { label: '🌌 코스믹 대기 (성운 그라데이션)', desc: 'An ethereal atmosphere with soft cosmic nebula, swirling gradients of light lilac sliding into cool lavender and powder pink colors, with no visible horizons, stars or galaxy decor.' },
+            indoor:  { label: '🪟 흐린 날 아날로그 룸', desc: 'A quiet nostalgic interior room with faded lilac walls, soft hazy atmosphere, vintage lace curtains letting in a misty ambient glow.' },
+            studio:  { label: '🎞️ 미니멀 에디토리얼 백월', desc: 'A minimal studio background wall colored in powder pink and soft glass lilac, elegant simple photography set.' }
+        };
+
+        // ---------- 전역 상태 ----------
+        const state = {
+            fragment: 'afar',
+            genre: 'lolita_sweet',
+            engine: 'pollinations',     // 'pollinations'(무료·키 불필요) | 'imagen'(Google 키)
+            clothes: [],            // {id, dataUrl, genreKey, genreLabel}
+            selectedClothId: null,
+            modelRefDataUrl: null,
+            poseDesc: posePresets[0].desc,
+            poseRefDataUrl: null,   // 업로드한 포즈 참고 사진(선택, Google AI 전용)
+            dressedDataUrl: null,
+            bgChoice: 'default',
+            bgRefDataUrl: null,
+            finalDataUrl: null
+        };
+        let clothCounter = 0;
+        let userPickedEngine = false;   // 엔진 자동 기본값(키 유무) vs 사용자 수동 선택 구분
+
+        // ====================================================================
+        // 세션 영속 저장 (IndexedDB) — 새로고침해도 생성물 유지. 이미지가 커서
+        // localStorage(5MB) 대신 IndexedDB 사용. 미지원/사생활 모드면 조용히 무시.
+        // ====================================================================
+        const IDB_NAME = 'vyw-lookbook', IDB_STORE = 'state', IDB_KEY = 'session';
+        function idbOpen() {
+            return new Promise((res, rej) => {
+                if (!window.indexedDB) return rej(new Error('no indexedDB'));
+                const r = indexedDB.open(IDB_NAME, 1);
+                r.onupgradeneeded = () => r.result.createObjectStore(IDB_STORE);
+                r.onsuccess = () => res(r.result);
+                r.onerror = () => rej(r.error);
+            });
+        }
+        function snapshotState() {
+            return {
+                v: 1, clothCounter, userPickedEngine, engine: state.engine,
+                fragment: state.fragment, genre: state.genre, poseDesc: state.poseDesc,
+                selectedClothId: state.selectedClothId, bgChoice: state.bgChoice,
+                clothes: state.clothes, modelRefDataUrl: state.modelRefDataUrl,
+                poseRefDataUrl: state.poseRefDataUrl,
+                dressedDataUrl: state.dressedDataUrl, bgRefDataUrl: state.bgRefDataUrl,
+                finalDataUrl: state.finalDataUrl
+            };
+        }
+        async function persistState() {
+            try {
+                const db = await idbOpen();
+                await new Promise((res, rej) => {
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).put(snapshotState(), IDB_KEY);
+                    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+                });
+            } catch (e) { console.warn('세션 저장 실패(무시):', e.message); }
+        }
+        async function loadState() {
+            try {
+                // IndexedDB가 멈추는 환경(사생활 모드 등)에서도 앱이 막히지 않도록 2.5s 타임아웃
+                const db = await Promise.race([
+                    idbOpen(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('idb timeout')), 2500))
+                ]);
+                return await new Promise((res) => {
+                    const g = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(IDB_KEY);
+                    g.onsuccess = () => res(g.result || null);
+                    g.onerror = () => res(null);
+                });
+            } catch (e) { return null; }
+        }
+        async function clearSession() {
+            try {
+                const db = await idbOpen();
+                await new Promise((res) => { const tx = db.transaction(IDB_STORE, 'readwrite'); tx.objectStore(IDB_STORE).delete(IDB_KEY); tx.oncomplete = res; tx.onerror = res; });
+            } catch (e) {}
+        }
+        async function restoreSession() {
+            const snap = await loadState();
+            if (!snap) return;
+            state.fragment = snap.fragment || state.fragment;
+            state.genre = snap.genre || state.genre;
+            state.poseDesc = snap.poseDesc || state.poseDesc;
+            state.selectedClothId = snap.selectedClothId || null;
+            state.bgChoice = snap.bgChoice || state.bgChoice;
+            state.clothes = Array.isArray(snap.clothes) ? snap.clothes : [];
+            state.modelRefDataUrl = snap.modelRefDataUrl || null;
+            state.poseRefDataUrl = snap.poseRefDataUrl || null;
+            state.dressedDataUrl = snap.dressedDataUrl || null;
+            state.bgRefDataUrl = snap.bgRefDataUrl || null;
+            state.finalDataUrl = snap.finalDataUrl || null;
+            clothCounter = snap.clothCounter || state.clothes.length;
+            if (snap.engine) state.engine = snap.engine;
+            if (typeof snap.userPickedEngine === 'boolean') userPickedEngine = snap.userPickedEngine;
+            // UI 재구성
+            renderFragmentSelectors(); renderGenreSelectors(); renderBgSelectors(); renderEngineSelectors();
+            renderClothGallery(); updateHome();
+            if (!state.poseRefDataUrl) {   // 업로드 포즈가 있으면 프리셋 선택 건너뜀(선택 시 poseRef가 지워지므로)
+                const pose = posePresets.find(p => p.desc === state.poseDesc);
+                if (pose) selectPose(pose.id);
+            }
+            if (state.poseRefDataUrl) {
+                document.getElementById('pose-preview').src = state.poseRefDataUrl;
+                document.getElementById('pose-preview').classList.remove('hidden');
+                document.getElementById('pose-dropzone-prompt').classList.add('hidden');
+                document.getElementById('pose-remove').classList.remove('hidden');
+                document.querySelectorAll('.pose-card').forEach(card => { card.classList.remove('border-vyw-pink', 'bg-vyw-deep/30'); card.classList.add('border-vyw-glass/10', 'bg-vyw-charcoal/40'); });
+            }
+            if (state.modelRefDataUrl) {
+                document.getElementById('model-preview').src = state.modelRefDataUrl;
+                document.getElementById('model-preview').classList.remove('hidden');
+                document.getElementById('model-dropzone-prompt').classList.add('hidden');
+                document.getElementById('model-remove').classList.remove('hidden');
+            }
+            if (state.bgRefDataUrl) {
+                document.getElementById('bg-preview').src = state.bgRefDataUrl;
+                document.getElementById('bg-preview').classList.remove('hidden');
+                document.getElementById('bg-dropzone-prompt').classList.add('hidden');
+                document.getElementById('bg-remove').classList.remove('hidden');
+            }
+            showDressedOutput(); showFinalOutput();
+        }
+
+        const VIEWS = ['home', 'cloth', 'model', 'bg'];
+
+        // ====================================================================
+        // 초기화
+        // ====================================================================
+        window.onload = async function () {
+            renderFragmentSelectors();
+            renderGenreSelectors();
+            renderPoseSelectors();
+            renderBgSelectors();
+            renderEngineSelectors();
+            setupDropzone('model-dropzone', 'model-file-input', applyModelRef);
+            setupDropzone('pose-dropzone', 'pose-file-input', applyPoseRef);
+            setupDropzone('bg-dropzone', 'bg-file-input', applyBgRef);
+            initApiKey();
+            selectPose('pose-1');
+
+            await restoreSession();   // IndexedDB에 저장된 생성물 복원(새로고침 유지)
+
+            window.addEventListener('hashchange', () => navigate(currentHashView()));
+            navigate(currentHashView());
+        };
+
+        function currentHashView() {
+            const h = (location.hash || '').replace('#', '');
+            return VIEWS.includes(h) ? h : 'home';
+        }
+
+        // ====================================================================
+        // 라우터
+        // ====================================================================
+        function navigate(view) {
+            if (!VIEWS.includes(view)) view = 'home';
+            VIEWS.forEach(v => {
+                document.getElementById('view-' + v).classList.toggle('hidden', v !== view);
+            });
+            if (location.hash.replace('#', '') !== view) location.hash = view;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 진입 시 동적 콘텐츠 갱신
+            if (view === 'model') { renderClothPicker(); showDressedOutput(); }
+            if (view === 'bg') { showFinalOutput(); renderBgPlaceholder(); renderBgSelectors(); }
+            updateStepNav(view);
+            updateHome();
+        }
+
+        function updateStepNav(active) {
+            document.querySelectorAll('.step-nav').forEach(btn => {
+                const isActive = btn.dataset.step === active;
+                btn.classList.toggle('bg-vyw-pink/20', isActive);
+                btn.classList.toggle('text-vyw-pink', isActive);
+                btn.classList.toggle('text-vyw-glass', !isActive);
+            });
+        }
+
+        // 히어로 "스튜디오 들어가기" → 아래 3개 카드 섹션으로 스크롤
+        function scrollToEnter() {
+            const el = document.getElementById('enter');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 홈 카드 썸네일/배지 갱신
+        function updateHome() {
+            const lastCloth = state.clothes[state.clothes.length - 1];
+            setHomeCard('cloth', lastCloth ? lastCloth.dataUrl : null, state.clothes.length ? state.clothes.length + '벌' : null);
+            setHomeCard('model', state.dressedDataUrl, state.dressedDataUrl ? '착장 완료' : null);
+            setHomeCard('bg', state.finalDataUrl, state.finalDataUrl ? '완성' : null);
+        }
+        function setHomeCard(key, dataUrl, badgeText) {
+            const thumb = document.getElementById('home-thumb-' + key);
+            const badge = document.getElementById('home-badge-' + key);
+            if (dataUrl) { thumb.src = dataUrl; thumb.style.opacity = '0.45'; } else { thumb.removeAttribute('src'); thumb.style.opacity = '0'; }
+            if (badgeText) { badge.textContent = badgeText; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+        }
+
+        // ====================================================================
+        // 셀렉터 렌더링 (Fragment / Genre / Pose / Background)
+        // ====================================================================
+        function renderFragmentSelectors() {
+            const c = document.getElementById('fragment-selectors');
+            c.innerHTML = '';
+            Object.entries(fragments).forEach(([key, f]) => {
+                const active = key === state.fragment;
+                c.innerHTML += `<button onclick="selectFragment('${key}')" data-frag="${key}" class="frag-btn px-3 py-2.5 text-left rounded-lg border text-xs transition-all ${active ? 'border-vyw-pink bg-vyw-deep/30 text-vyw-pink' : 'border-vyw-glass/10 bg-vyw-charcoal/40 text-vyw-glass'} hover:border-vyw-pink/50">${f.label}</button>`;
+            });
+            document.getElementById('fragment-desc').textContent = fragments[state.fragment].desc;
+            renderFragmentMood();
+        }
+        function selectFragment(key) {
+            state.fragment = key;
+            const allowed = fragments[key].genres;
+            if (!allowed.includes(state.genre)) state.genre = allowed[0];
+            renderFragmentSelectors();
+            renderGenreSelectors();
+            persistState();
+        }
+
+        // Fragment 무드 비주얼: 레퍼런스 무드 사진 + 팔레트 틴트 + 컬러 점 + 키워드
+        function renderFragmentMood() {
+            const f = fragments[state.fragment];
+            document.getElementById('fragment-mood-img').src = f.image;
+            document.getElementById('fragment-mood-tint').style.background = `linear-gradient(155deg, ${f.tintFrom}bf, ${f.tintTo}73)`;
+            document.getElementById('fragment-mood-name').textContent = f.label;
+            document.getElementById('fragment-mood-dots').innerHTML = f.dots.map(c => `<span class="w-3.5 h-3.5 rounded-full border border-white/40 shadow" style="background:${c}"></span>`).join('');
+            document.getElementById('fragment-mood-keywords').innerHTML = f.keywords.map(k => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-black/40 border border-white/25 text-white/90 backdrop-blur-sm">${k}</span>`).join('');
+        }
+
+        function renderGenreSelectors() {
+            const c = document.getElementById('genre-selectors');
+            const allowed = fragments[state.fragment].genres;
+            if (!allowed.includes(state.genre)) state.genre = allowed[0];
+            c.innerHTML = '';
+            allowed.forEach(key => {
+                const g = genres[key];
+                const active = key === state.genre;
+                c.innerHTML += `<button onclick="selectGenre('${key}')" data-genre="${key}" class="genre-btn px-3 py-2.5 text-left rounded-lg border text-xs transition-all ${active ? 'border-vyw-pink bg-vyw-deep/30 text-vyw-pink' : 'border-vyw-glass/10 bg-vyw-charcoal/40 text-vyw-glass'} hover:border-vyw-pink/50">${g.label}</button>`;
+            });
+        }
+        function selectGenre(key) {
+            state.genre = key;
+            renderGenreSelectors();
+            persistState();
+        }
+
+        function renderPoseSelectors() {
+            const c = document.getElementById('pose-selectors');
+            c.innerHTML = '';
+            posePresets.forEach((pose, i) => {
+                const active = i === 0;
+                c.innerHTML += `
+                    <button onclick="selectPose('${pose.id}')" id="${pose.id}" class="pose-card text-center p-2 rounded-xl border ${active ? 'border-vyw-pink bg-vyw-deep/30' : 'border-vyw-glass/10 bg-vyw-charcoal/40'} hover:border-vyw-pink/50 transition-all flex flex-col items-center justify-center gap-1.5 h-20">
+                        <span class="text-2xl leading-none">${pose.icon}</span>
+                        <span class="text-[10px] text-vyw-white/90 text-center font-serif leading-tight">${pose.name}</span>
+                    </button>`;
+            });
+        }
+        function selectPose(poseId) {
+            document.querySelectorAll('.pose-card').forEach(card => {
+                card.classList.remove('border-vyw-pink', 'bg-vyw-deep/30');
+                card.classList.add('border-vyw-glass/10', 'bg-vyw-charcoal/40');
+            });
+            const target = document.getElementById(poseId);
+            if (target) { target.classList.add('border-vyw-pink', 'bg-vyw-deep/30'); target.classList.remove('border-vyw-glass/10', 'bg-vyw-charcoal/40'); }
+            const matched = posePresets.find(p => p.id === poseId);
+            if (matched) {
+                state.poseDesc = matched.desc; document.getElementById('selected-pose').value = matched.desc;
+                if (state.poseRefDataUrl) clearPoseRef();   // 프리셋 선택 시 업로드 포즈 해제(둘 중 하나)
+                persistState();
+            }
+        }
+
+        // 포즈 참고 사진 업로드/해제
+        function applyPoseRef(dataUrl) {
+            state.poseRefDataUrl = dataUrl;
+            const preview = document.getElementById('pose-preview');
+            preview.src = dataUrl; preview.classList.remove('hidden');
+            document.getElementById('pose-dropzone-prompt').classList.add('hidden');
+            document.getElementById('pose-remove').classList.remove('hidden');
+            // 프리셋 포즈 강조 해제(업로드가 우선)
+            document.querySelectorAll('.pose-card').forEach(card => {
+                card.classList.remove('border-vyw-pink', 'bg-vyw-deep/30');
+                card.classList.add('border-vyw-glass/10', 'bg-vyw-charcoal/40');
+            });
+            persistState();
+            showToast("🕺 포즈 참고 사진을 불러왔습니다. (Google AI 엔진에서 반영)", "fa-solid fa-person-rays");
+        }
+        function clearPoseRef(event) {
+            if (event) event.stopPropagation();
+            state.poseRefDataUrl = null;
+            const preview = document.getElementById('pose-preview');
+            preview.src = ''; preview.classList.add('hidden');
+            document.getElementById('pose-dropzone-prompt').classList.remove('hidden');
+            document.getElementById('pose-remove').classList.add('hidden');
+            persistState();
+        }
+
+        function renderBgSelectors() {
+            const c = document.getElementById('bg-selectors');
+            c.innerHTML = '';
+            Object.entries(backgrounds).forEach(([key, b]) => {
+                const active = key === state.bgChoice && !state.bgRefDataUrl;
+                c.innerHTML += `<button onclick="selectBg('${key}')" data-bg="${key}" class="bg-btn px-3 py-2.5 text-left rounded-lg border text-xs transition-all ${active ? 'border-vyw-pink bg-vyw-deep/30 text-vyw-pink' : 'border-vyw-glass/10 bg-vyw-charcoal/40 text-vyw-glass'} hover:border-vyw-pink/50">${b.label}</button>`;
+            });
+        }
+        function selectBg(key) {
+            state.bgChoice = key;
+            // 기본 배경을 고르면 업로드 배경 우선순위 해제
+            if (state.bgRefDataUrl) clearBgRef();
+            renderBgSelectors();
+            persistState();
+        }
+
+        // ---------- 생성 엔진 (3단계 공통: 옷·모델·배경) ----------
+        const engines = {
+            pollinations: { label: '🆓 무료', sub: 'Pollinations · 키 불필요' },
+            imagen: { label: '✨ Google AI', sub: 'API 키 사용' }
+        };
+        function renderEngineSelectors() {
+            const free = state.engine === 'pollinations';
+            document.querySelectorAll('.engine-selectors').forEach(c => {
+                c.innerHTML = Object.entries(engines).map(([key, e]) => {
+                    const active = key === state.engine;
+                    return `<button onclick="selectEngine('${key}')" class="px-3 py-2.5 rounded-lg border text-xs transition-all text-center ${active ? 'border-vyw-pink bg-vyw-deep/30 text-vyw-pink' : 'border-vyw-glass/10 bg-vyw-charcoal/40 text-vyw-glass'} hover:border-vyw-pink/50"><div class="font-medium">${e.label}</div><div class="text-[9px] opacity-70 mt-0.5">${e.sub}</div></button>`;
+                }).join('');
+            });
+            const note = free
+                ? 'API 키 없이 생성됩니다. 업로드 사진(모델·배경)과 이전 단계 픽셀의 정확한 반영은 Google AI(키)에서만 지원돼요. 무료 서버가 혼잡하면 자동 재시도합니다.'
+                : 'Google AI(키) 사용 — 생성된 옷·업로드 이미지를 실제로 반영합니다. 헤더 “API 설정”에서 키 등록 필요.';
+            document.querySelectorAll('.engine-note').forEach(n => n.textContent = note);
+            setEngineLabel('cloth-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH IMAGE · FLAT-LAY');
+            setEngineLabel('model-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH · IMAGE TO IMAGE');
+            setEngineLabel('bg-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH · COMPOSITE');
+        }
+        function setEngineLabel(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
+        function selectEngine(key) {
+            state.engine = key;
+            userPickedEngine = true;   // 사용자가 직접 고르면 자동 전환 중단
+            renderEngineSelectors();
+            persistState();
+        }
+
+        // ====================================================================
+        // API Key 관리
+        // ====================================================================
+        // ---------- 로그인/토큰 (서버 프록시 인증) ----------
+        // 실제 Gemini 키는 서버(Functions)에만 있고, 프론트는 비밀번호 로그인으로 받은
+        // 토큰(7일)을 /api/gemini 호출에 사용한다.
+        function getToken() {
+            try {
+                const raw = localStorage.getItem('vyw_auth');
+                if (!raw) return "";
+                const { token, exp } = JSON.parse(raw);
+                if (!token || !exp || exp <= Math.floor(Date.now() / 1000)) { localStorage.removeItem('vyw_auth'); return ""; }
+                return token;
+            } catch { return ""; }
+        }
+        function isLoggedIn() { return !!getToken(); }
+        function initApiKey() { // (이름 유지) 로그인 상태 표시 + 엔진 자동 기본값
+            const logged = isLoggedIn();
+            const indicator = document.getElementById('api-status-indicator');
+            const statusText = document.getElementById('api-status-text');
+            indicator.className = "w-1.5 h-1.5 rounded-full " + (logged ? "bg-green-500" : "bg-red-500");
+            statusText.innerText = logged ? "로그인됨" : "로그인";
+            if (!userPickedEngine) {
+                state.engine = logged ? 'imagen' : 'pollinations';
+                if (typeof renderEngineSelectors === 'function') renderEngineSelectors();
+            }
+        }
+        function requireLogin() {
+            if (!isLoggedIn()) { showToast("🔒 Google AI 생성은 로그인이 필요합니다.", "fa-solid fa-lock"); openLoginModal(); return false; }
+            return true;
+        }
+        function openLoginModal() { document.getElementById('api-modal').classList.remove('hidden'); setTimeout(() => document.getElementById('input-password').focus(), 50); }
+        function closeLoginModal() { document.getElementById('api-modal').classList.add('hidden'); }
+        async function doLogin() {
+            const pw = document.getElementById('input-password').value;
+            if (!pw) { showToast("⚠️ 비밀번호를 입력하세요.", "fa-solid fa-triangle-exclamation"); return; }
+            try {
+                const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+                if (r.status === 401) { showToast("🚫 비밀번호가 올바르지 않습니다.", "fa-solid fa-circle-exclamation"); return; }
+                if (!r.ok) { showToast("🛑 로그인 실패 (서버 " + r.status + "). 배포/Functions 상태를 확인하세요.", "fa-solid fa-circle-exclamation"); return; }
+                const { token, exp } = await r.json();
+                localStorage.setItem('vyw_auth', JSON.stringify({ token, exp }));
+                document.getElementById('input-password').value = "";
+                initApiKey(); closeLoginModal();
+                showToast("✅ 로그인되었습니다. (7일 유지)", "fa-solid fa-check");
+            } catch (e) {
+                showToast("🛑 로그인 요청 실패: 로컬은 emulator, 배포는 Functions가 필요합니다.", "fa-solid fa-circle-exclamation");
+            }
+        }
+        function doLogout() {
+            localStorage.removeItem('vyw_auth');
+            initApiKey(); closeLoginModal();
+            showToast("🧹 로그아웃되었습니다.", "fa-solid fa-trash");
+        }
+
+        // ====================================================================
+        // 공통 유틸: 토스트 / 로딩 / 드롭존 / 데이터URL
+        // ====================================================================
+        function showToast(text, iconClass) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-icon').className = iconClass;
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none'), 6000);
+        }
+
+        function setLoading(on, sub) {
+            const el = document.getElementById('global-loading');
+            if (on) {
+                if (sub) document.getElementById('loading-sub').innerText = sub;
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        function setupDropzone(zoneId, inputId, onLoad) {
+            const zone = document.getElementById(zoneId);
+            const input = document.getElementById(inputId);
+            zone.addEventListener('click', () => input.click());
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('border-vyw-pink', 'bg-vyw-deep/20'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('border-vyw-pink', 'bg-vyw-deep/20'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('border-vyw-pink', 'bg-vyw-deep/20');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], onLoad);
+            });
+            input.addEventListener('change', e => { if (e.target.files && e.target.files[0]) readFile(e.target.files[0], onLoad); });
+        }
+        function readFile(file, cb) {
+            const r = new FileReader();
+            r.onload = e => cb(e.target.result);
+            r.readAsDataURL(file);
+        }
+        function stripPrefix(dataUrl) { return dataUrl.split(',')[1]; }
+        function mimeOf(dataUrl) { const m = /^data:([^;]+);/.exec(dataUrl); return m ? m[1] : 'image/png'; }
+
+        // ====================================================================
+        // API 호출 헬퍼
+        // ====================================================================
+        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+            let lastErr;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return await response.json();
+                    const bodyText = await response.text().catch(() => '');
+                    // 일시적 rate-limit(429)만 재시도. 단 quota=0(빌링 미설정)은 재시도 무의미 → 즉시 표면화.
+                    if (response.status === 429 && !/limit['":\s]*0|free_tier|billing/i.test(bodyText)) {
+                        await new Promise(res => setTimeout(res, delay)); delay *= 2; continue;
+                    }
+                    throw new Error(`HTTP ${response.status} — ${bodyText.replace(/\s+/g, ' ').slice(0, 300)}`);
+                } catch (err) {
+                    lastErr = err;
+                    if (err.message && err.message.startsWith('HTTP ')) throw err;  // API 오류는 즉시 중단
+                    if (i === retries - 1) throw err;                                // 네트워크 오류만 재시도
+                    await new Promise(res => setTimeout(res, delay)); delay *= 2;
+                }
+            }
+            throw lastErr;
+        }
+
+        // 생성 오류를 사용자 친화 메시지로 변환(빌링/할당량/키 문제 자동 감지)
+        function genErrorMsg(err, keyEngine) {
+            const m = (err && err.message) || '';
+            if (/limit['":\s]*0|free_tier|billing|RESOURCE_EXHAUSTED|quota/i.test(m))
+                return "🛑 Gemini 무료 티어는 이미지 생성 불가(할당량 0). Google Cloud 콘솔에서 결제(Paid Tier 1)를 켜야 합니다. 우선은 무료 엔진으로 옷 생성이 가능해요.";
+            if (/API_?KEY_?INVALID|API key not valid|PERMISSION_DENIED|HTTP 40[13]/i.test(m))
+                return "🛑 API 키 권한/유효성 문제입니다. 키를 다시 확인하세요.";
+            if (/HTTP 404|not found|is not supported/i.test(m))
+                return "🛑 모델 접근 불가(404). 키의 모델 권한을 확인하세요.";
+            if (keyEngine) return "🛑 생성 실패: " + m.slice(0, 130);
+            return "🛑 무료 서버 혼잡으로 실패. 잠시 후 재시도하거나 Google AI(키)로 전환하세요.";
+        }
+
+        // Pollinations(flux) 무료 텍스트→이미지 (API 키 불필요) → dataURL 반환.
+        // CORS 허용(access-control-allow-origin:*)이라 브라우저에서 직접 fetch→base64 가능.
+        // 무료 티어는 IP당 동시 1건 제한 → 혼잡 시 402를 던지므로 백오프 재시도한다.
+        async function pollinationsGenerate(prompt, w = 768, h = 1024) {
+            const seed = Math.floor(Math.random() * 1000000000);
+            const params = new URLSearchParams({ width: String(w), height: String(h), nologo: 'true', nofeed: 'true', model: 'flux', seed: String(seed) });
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
+            let delay = 7000;
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                const resp = await fetch(url).catch(() => null);
+                if (resp && resp.ok) {
+                    const blob = await resp.blob();
+                    if (!blob.type.startsWith('image/')) throw new Error('pollinations non-image response');
+                    return await new Promise((res, rej) => {
+                        const r = new FileReader();
+                        r.onload = () => res(r.result);
+                        r.onerror = rej;
+                        r.readAsDataURL(blob);
+                    });
+                }
+                // 402(큐 혼잡)·429·5xx·네트워크 → 대기 후 재시도
+                const status = resp ? resp.status : 'network';
+                if (resp && status !== 402 && status !== 429 && status < 500) throw new Error('pollinations ' + status);
+                if (attempt === 4) throw new Error('pollinations busy (' + status + ')');
+                setLoading(true, `무료 서버가 혼잡해요 — 자동 재시도 중... (${attempt}/3)`);
+                await new Promise(r => setTimeout(r, delay));
+                delay = Math.round(delay * 1.5);
+            }
+        }
+
+        // Gemini(정식) 이미지 생성/편집을 서버 프록시(/api/gemini)로 호출.
+        // 키는 서버에만 있으므로 프론트는 로그인 토큰만 사용. images: [dataUrl,...]
+        async function geminiEdit(promptText, images, aspect = '1:1') {
+            const token = getToken();
+            if (!token) { openLoginModal(); throw new Error('로그인이 필요합니다.'); }
+            const resp = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ prompt: promptText, images: (images || []).filter(Boolean), aspect })
+            });
+            if (resp.status === 401) { localStorage.removeItem('vyw_auth'); initApiKey(); openLoginModal(); throw new Error('세션 만료 — 다시 로그인하세요.'); }
+            if (!resp.ok) { const t = await resp.json().catch(() => ({})); throw new Error('HTTP ' + resp.status + ' — ' + (t.detail || t.error || '')); }
+            const data = await resp.json();
+            return data && data.b64 ? `data:image/png;base64,${data.b64}` : null;
+        }
+
+        // ====================================================================
+        // STEP 01 — 옷 생성 (플랫레이 콜라주)
+        // ====================================================================
+        function buildClothPrompt() {
+            const garment = genres[state.genre].desc;
+            const frag = fragments[state.fragment];
+            return `A flat-lay collage product photograph, top-down view, on a clean soft off-white seamless background. A complete coordinated outfit set neatly arranged with generous spacing between each item: ${garment}. Surrounding coordinating accessories laid out separately: a delicate lace choker, a hair ribbon or beret, lace gloves, a small handbag, and a pair of shoes. Among the items rests a single small raw unpolished lavender amethyst crystal and one small smooth liquid chrome orb as accent pieces. No human, no body, no mannequin, no face — only the clothing and accessories laid flat and clearly separated, like a fashion magazine product flat-lay. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost} Soft diffused even lighting, gentle natural shadows.`;
+        }
+
+        async function generateClothing() {
+            const useGemini = state.engine === 'imagen';
+            if (useGemini && !requireLogin()) return;
+            setLoading(true, useGemini ? "Gemini 2.5 Flash Image · 옷 콜라주 생성 중..." : "Pollinations(flux) · 무료 옷 콜라주 생성 중...");
+            try {
+                const prompt = buildClothPrompt();
+                // Google AI: Imagen(유료 전용) 대신 gemini-2.5-flash-image 텍스트→이미지(모델·배경과 동일 모델로 통일)
+                const dataUrl = useGemini ? await geminiEdit(prompt, [], '1:1') : await pollinationsGenerate(prompt, 1024, 1024);
+                if (!dataUrl) throw new Error("이미지 생성 실패");
+                const id = 'cloth-' + (++clothCounter);
+                state.clothes.push({ id, dataUrl, genreKey: state.genre, genreLabel: genres[state.genre].label, fragmentKey: state.fragment });
+                if (!state.selectedClothId) state.selectedClothId = id;
+                renderClothGallery();
+                updateHome();
+                persistState();
+                showToast("🧺 옷 콜라주 한 벌이 생성되었습니다.", "fa-solid fa-shirt");
+            } catch (err) {
+                console.error(err);
+                showToast(genErrorMsg(err, useGemini), "fa-solid fa-circle-exclamation");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function renderClothGallery() {
+            const gallery = document.getElementById('cloth-gallery');
+            const empty = document.getElementById('cloth-empty');
+            document.getElementById('cloth-count').textContent = state.clothes.length + ' 벌';
+            if (!state.clothes.length) { empty.classList.remove('hidden'); gallery.innerHTML = ''; return; }
+            empty.classList.add('hidden');
+            gallery.innerHTML = state.clothes.map(c => `
+                <div class="selectable ${c.id === state.selectedClothId ? 'is-selected' : ''} relative rounded-xl overflow-hidden border border-vyw-glass/20 cursor-pointer group" onclick="selectCloth('${c.id}')">
+                    <img src="${c.dataUrl}" class="w-full aspect-square object-cover" alt="cloth collage">
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                        <span class="text-[10px] text-vyw-white/90">${c.genreLabel}</span>
+                    </div>
+                    <button onclick="event.stopPropagation(); downloadResult(state.clothes.find(x=>x.id==='${c.id}').dataUrl, 'VYW-cloth')" class="absolute top-2 right-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center text-[11px] text-white hover:bg-vyw-pink/80 transition-all opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                    <div class="absolute top-2 left-2 w-5 h-5 rounded-full border-2 ${c.id === state.selectedClothId ? 'bg-vyw-pink border-vyw-pink' : 'border-white/60 bg-black/30'} flex items-center justify-center">
+                        ${c.id === state.selectedClothId ? '<i class="fa-solid fa-check text-[9px] text-vyw-dark"></i>' : ''}
+                    </div>
+                </div>`).join('');
+        }
+        function selectCloth(id) {
+            state.selectedClothId = id;
+            renderClothGallery();
+            renderClothPicker();
+            persistState();
+        }
+
+        // ====================================================================
+        // STEP 02 — 모델 착장
+        // ====================================================================
+        function renderClothPicker() {
+            const picker = document.getElementById('model-cloth-picker');
+            const empty = document.getElementById('model-cloth-empty');
+            if (!state.clothes.length) { picker.innerHTML = ''; empty.classList.remove('hidden'); return; }
+            empty.classList.add('hidden');
+            picker.innerHTML = state.clothes.map(c => `
+                <div class="selectable ${c.id === state.selectedClothId ? 'is-selected' : ''} relative rounded-lg overflow-hidden border border-vyw-glass/20 cursor-pointer" onclick="selectCloth('${c.id}')">
+                    <img src="${c.dataUrl}" class="w-full aspect-square object-cover" alt="cloth">
+                    ${c.id === state.selectedClothId ? '<div class="absolute top-1 right-1 w-4 h-4 rounded-full bg-vyw-pink flex items-center justify-center"><i class="fa-solid fa-check text-[8px] text-vyw-dark"></i></div>' : ''}
+                </div>`).join('');
+        }
+
+        function applyModelRef(dataUrl) {
+            state.modelRefDataUrl = dataUrl;
+            const preview = document.getElementById('model-preview');
+            preview.src = dataUrl; preview.classList.remove('hidden');
+            document.getElementById('model-dropzone-prompt').classList.add('hidden');
+            document.getElementById('model-remove').classList.remove('hidden');
+            persistState();
+            showToast("📂 모델 사진을 불러왔습니다.", "fa-solid fa-file-image");
+        }
+        function clearModelRef(event) {
+            if (event) event.stopPropagation();
+            state.modelRefDataUrl = null;
+            const preview = document.getElementById('model-preview');
+            preview.src = ''; preview.classList.add('hidden');
+            document.getElementById('model-dropzone-prompt').classList.remove('hidden');
+            document.getElementById('model-remove').classList.add('hidden');
+            persistState();
+        }
+
+        function buildDressPrompt(hasModelRef, hasPoseRef) {
+            const frag = fragments[state.fragment];
+            const framing = `Square 1:1 fashion editorial portrait, the model standing centred in a balanced square composition, her entire body and the complete outfit clearly visible from head to shoes. Tall slender fashion-model proportions with long legs that form the lower half of the body, elongated elegant figure, small head, straight-on eye-level full-body shot with no foreshortening, anatomically correct realistic human body, NOT short legs, NOT a compressed or squashed lower body, no distortion.`;
+            const fidelity = `CRITICAL: faithfully reproduce the EXACT same outfit shown in the clothing flat-lay reference image — the same garments, colors, patterns, lace, ribbons, silhouette, accessories and shoes — now worn on her body as a coordinated styled look. Do not invent a different outfit.`;
+            // 첨부 이미지 순서(옷 → [모델] → [포즈])에 맞춰 역할 설명 동적 구성
+            let idx = 0; const roles = [];
+            roles.push(`Image ${++idx} = the clothing flat-lay reference (the EXACT outfit she must wear).`);
+            if (hasModelRef) roles.push(`Image ${++idx} = the model reference; keep her face, body proportions and likeness consistent with it.`);
+            if (hasPoseRef)  roles.push(`Image ${++idx} = the pose reference; reproduce this exact body pose and stance.`);
+            const poseInstr = hasPoseRef ? `Reproduce the exact body pose and stance shown in the pose reference image.` : `${state.poseDesc}.`;
+            return `${framing} ${brandCoreSubject} ${roles.join(' ')} ${poseInstr} ${fidelity} She also holds a small raw lavender amethyst crystal. Place her against a plain seamless neutral light backdrop (soft breath-white to glass-lilac), simple and even so it can be replaced afterward. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost}`;
+        }
+
+        // 키 없는(Pollinations) 모델 착장: 선택한 옷 카드의 장르·Fragment를 묘사해 텍스트→이미지로 생성
+        // (무료는 img2img 불가 → 옷이 정확히 같진 않음. 비율만 전신 3:4로 일관 유지.)
+        function buildDressPromptText(cloth) {
+            const g = genres[cloth.genreKey] ? genres[cloth.genreKey].desc : '';
+            const frag = fragments[cloth.fragmentKey] || fragments[state.fragment];
+            return `Square 1:1 fashion editorial portrait, the model standing centred in a balanced square composition, entire body and full outfit visible from head to shoes. Tall slender fashion-model proportions with long legs that form the lower half of the body, elongated elegant figure, small head, straight-on eye-level full-body shot with no foreshortening, anatomically correct realistic human body, NOT short legs, NOT a compressed or squashed lower body, no distortion. ${brandCoreSubject} ${state.poseDesc}. She is wearing ${g}. She holds a small raw lavender amethyst crystal. Plain seamless neutral light studio backdrop (soft breath-white to glass-lilac), simple and even. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost}`;
+        }
+
+        async function generateDressed() {
+            const cloth = state.clothes.find(c => c.id === state.selectedClothId);
+            if (!cloth) { showToast("👗 먼저 입힐 옷 카드를 선택하세요.", "fa-solid fa-triangle-exclamation"); return; }
+            const useGemini = state.engine === 'imagen';
+            if (useGemini && !requireLogin()) return;
+            setLoading(true, useGemini ? "Gemini 2.5 Flash · 모델 착장 합성 중..." : "Pollinations(flux) · 무료 모델 착장 생성 중...");
+            try {
+                let dataUrl;
+                if (useGemini) {
+                    const images = [cloth.dataUrl];                                   // 순서: 옷
+                    if (state.modelRefDataUrl) images.push(state.modelRefDataUrl);     // → 모델(선택)
+                    if (state.poseRefDataUrl) images.push(state.poseRefDataUrl);       // → 포즈(선택)
+                    dataUrl = await geminiEdit(buildDressPrompt(!!state.modelRefDataUrl, !!state.poseRefDataUrl), images, '1:1');
+                } else {
+                    dataUrl = await pollinationsGenerate(buildDressPromptText(cloth), 1024, 1024);
+                }
+                if (!dataUrl) throw new Error("착장 이미지 생성 실패");
+                state.dressedDataUrl = dataUrl;
+                showDressedOutput();
+                updateHome();
+                persistState();
+                showToast("📸 모델 착장이 완료되었습니다.", "fa-solid fa-wand-magic-sparkles");
+            } catch (err) {
+                console.error(err);
+                showToast(genErrorMsg(err, useGemini), "fa-solid fa-circle-exclamation");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function showDressedOutput() {
+            const img = document.getElementById('model-output');
+            const ph = document.getElementById('model-placeholder');
+            const dl = document.getElementById('model-download');
+            if (state.dressedDataUrl) {
+                img.src = state.dressedDataUrl; img.classList.remove('hidden'); ph.classList.add('hidden');
+                dl.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                img.classList.add('hidden'); ph.classList.remove('hidden');
+                dl.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        // ====================================================================
+        // STEP 03 — 배경 삽입
+        // ====================================================================
+        function applyBgRef(dataUrl) {
+            state.bgRefDataUrl = dataUrl;
+            const preview = document.getElementById('bg-preview');
+            preview.src = dataUrl; preview.classList.remove('hidden');
+            document.getElementById('bg-dropzone-prompt').classList.add('hidden');
+            document.getElementById('bg-remove').classList.remove('hidden');
+            renderBgSelectors(); // 기본 배경 강조 해제
+            persistState();
+            showToast("📂 배경 이미지를 불러왔습니다.", "fa-solid fa-file-image");
+        }
+        function clearBgRef(event) {
+            if (event) event.stopPropagation();
+            state.bgRefDataUrl = null;
+            const preview = document.getElementById('bg-preview');
+            preview.src = ''; preview.classList.add('hidden');
+            document.getElementById('bg-dropzone-prompt').classList.remove('hidden');
+            document.getElementById('bg-remove').classList.add('hidden');
+            renderBgSelectors();
+            persistState();
+        }
+
+        function buildFinalPrompt(hasBgRef) {
+            const base = `Take the person in the FIRST attached photograph and keep her, her face, hair, outfit, accessories and pose EXACTLY the same — do not change the model or clothing. Only replace and harmonize the background. Blend lighting, shadows and color grading so she sits naturally in the new scene.`;
+            let scene;
+            if (hasBgRef) {
+                scene = `Place her into the scene shown in the SECOND attached background image.`;
+            } else {
+                scene = `Place her into this background scene: ${backgrounds[state.bgChoice].desc}`;
+            }
+            return `${base} ${scene} ${fragments[state.fragment].palette} ${brandCorePost}`;
+        }
+
+        // 키 없는(Pollinations) 배경 삽입: 뮤즈+선택 옷+포즈+선택 배경을 묘사해 전체 컷을 새로 생성
+        // (무료는 img2img 불가 → 앞 단계 인물/옷이 그대로 유지되진 않음. 비율만 전신 3:4 일관.)
+        function buildFinalPromptText() {
+            const cloth = state.clothes.find(c => c.id === state.selectedClothId);
+            const g = cloth && genres[cloth.genreKey] ? genres[cloth.genreKey].desc : '';
+            const frag = (cloth && fragments[cloth.fragmentKey]) || fragments[state.fragment];
+            const scene = backgrounds[state.bgChoice] ? backgrounds[state.bgChoice].desc : backgrounds.default.desc;
+            return `Square 1:1 fashion editorial photograph, the model standing centred in a balanced square composition, entire body and full outfit visible. Tall slender fashion-model proportions with long legs that form the lower half of the body, elongated elegant figure, small head, straight-on eye-level full-body shot with no foreshortening, anatomically correct realistic human body, NOT short legs, NOT a compressed or squashed lower body, no distortion. ${brandCoreSubject} ${state.poseDesc}. She is wearing ${g}. She holds a small raw lavender amethyst crystal. Background setting: ${scene}. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost}`;
+        }
+
+        async function generateFinal() {
+            if (!state.dressedDataUrl) { showToast("🧍 먼저 모델 착장을 완료하세요.", "fa-solid fa-triangle-exclamation"); navigate('model'); return; }
+            const useGemini = state.engine === 'imagen';
+            if (useGemini && !requireLogin()) return;
+            setLoading(true, useGemini ? "Gemini 2.5 Flash · 배경 합성 중..." : "Pollinations(flux) · 무료 배경 합성 중...");
+            try {
+                let dataUrl;
+                if (useGemini) {
+                    const images = state.bgRefDataUrl ? [state.dressedDataUrl, state.bgRefDataUrl] : [state.dressedDataUrl];
+                    dataUrl = await geminiEdit(buildFinalPrompt(!!state.bgRefDataUrl), images, '1:1');
+                } else {
+                    dataUrl = await pollinationsGenerate(buildFinalPromptText(), 1024, 1024);
+                }
+                if (!dataUrl) throw new Error("최종 합성 이미지 생성 실패");
+                state.finalDataUrl = dataUrl;
+                showFinalOutput();
+                updateHome();
+                persistState();
+                showToast("🎨 최종 룩북 컷이 완성되었습니다.", "fa-solid fa-sparkles");
+            } catch (err) {
+                console.error(err);
+                showToast(genErrorMsg(err, useGemini), "fa-solid fa-circle-exclamation");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function showFinalOutput() {
+            const img = document.getElementById('bg-output');
+            const ph = document.getElementById('bg-placeholder');
+            const dl = document.getElementById('bg-download');
+            if (state.finalDataUrl) {
+                img.src = state.finalDataUrl; img.classList.remove('hidden'); ph.classList.add('hidden');
+                dl.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                img.classList.add('hidden'); ph.classList.remove('hidden');
+                dl.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        // 배경 뷰 진입 시 착장 여부에 따른 안내
+        function renderBgPlaceholder() {
+            const text = document.getElementById('bg-placeholder-text');
+            const goto = document.getElementById('bg-goto-model');
+            if (!state.dressedDataUrl) {
+                text.textContent = "먼저 모델 착장을 완료한 뒤 배경을 골라 합성하세요.";
+                goto.classList.remove('hidden');
+            } else {
+                text.textContent = "배경을 고르거나 업로드하고 합성 버튼을 누르세요.";
+                goto.classList.add('hidden');
+            }
+        }
+
+        // ====================================================================
+        // 다운로드
+        // ====================================================================
+        function downloadResult(dataUrl, prefix) {
+            if (!dataUrl) return;
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `${prefix || 'VYW'}-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("💾 이미지가 저장되었습니다.", "fa-solid fa-download");
+        }
+    </script>
+</body>
+</html>
