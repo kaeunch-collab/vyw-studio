@@ -202,3 +202,7 @@ firebase deploy
 - [x] `lookbook.html`에 실제 로고/무드 적용 (2026-06, 헤더 logo-pink + 홈 히어로 main-mood/logo-white).
       `brand-bible.html`은 아직 미적용.
 - [ ] (선택) `mood-bg-2.jpg`(597KB)가 가장 큼 — 더 줄이거나 webp 도입 검토
+
+## 공동 작업 기록
+
+두 사람이 같이 작업한다. 작업 전후 기록은 논문 저장소 `vyw-paper/작업기록.md`에 한곳으로 남긴다(작업 전 마지막 기록 읽기, 작업 후 덧붙이기). main에 바로 커밋하지 않고 브랜치에서 작업한다.
