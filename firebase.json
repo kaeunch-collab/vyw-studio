@@ -16,10 +16,26 @@
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=3600" }
         ]
+      },
+      {
+        "source": "/r-xiyedm7aw0l*",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        ]
+      },
+      {
+        "source": "/r-xiyedm7aw0l/**",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        ]
       }
     ]
   },
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "predeploy": ["node \"$RESOURCE_DIR/sync-survey-config.js\""]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

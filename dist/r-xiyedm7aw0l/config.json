@@ -1,0 +1,555 @@
+{
+  "notes": [
+    "ko 번역은 검증된 국문판 확인 전 임시 번역 — 주저자 검토 필요",
+    "CSI(Creativity Support Index) 동의 문항 12개(6요인×2)는 원문 확인 전이므로 en/ko를 모두 '[원문 확인 필요]'로 두었다. Cherry & Latulipe(2014) 원척도 확인 후 반드시 채울 것. (출처 미확인 상태에서 문항을 지어내지 않음)",
+    "이 파일의 문항 문구는 자유롭게 수정할 수 있다. 단, 문항 개수나 허용 값(척도 범위)을 바꾸면 functions/survey-schema.js 도 함께 수정해야 서버 검증이 통과한다.",
+    "개인정보 수집 금지: 이름·이메일·전화·학번 입력칸을 만들지 않는다. 모든 주관식에 privacyNote 를 표시한다.",
+    "자극 세트는 조건을 암시하지 않는 S번호와 이미지 파일명만 사용한다. 조건 매핑은 서버 전용 설정에서 관리한다."
+  ],
+  "consent": {
+    "user": {
+      "title": "연구 참여 안내 및 동의",
+      "intro": "본 연구는 생성형 이미지 AI로 제작한 룩북 이미지의 일관성과 작업 부담을 평가합니다. 아래 내용을 읽고 자발적으로 참여에 동의해 주세요.",
+      "sections": [
+        {
+          "heading": "연구 목적",
+          "body": "생성형 이미지 AI를 활용한 룩북 제작에서 조건에 따른 이미지 일관성, 작업 부담, 시스템 사용성, 창의성 지원 수준을 비교·평가하기 위한 학술 연구입니다."
+        },
+        {
+          "heading": "소요 시간",
+          "body": "전체 약 20~30분이 걸립니다. 연구자의 안내에 따라 두 번의 과업을 수행하고, 각 과업 직후 설문에 응답합니다."
+        },
+        {
+          "heading": "수집 항목",
+          "body": "지각된 일관성(4문항), 과업 부담감 NASA-TLX(6문항), 시스템 사용성 SUS(10문항), 창의성 지원 CSI(12문항), 과업 선호와 주관식 응답을 수집합니다. 배경 정보로 전공 여부, 실무 경력 구간, 생성형 이미지 AI 사용 빈도를 묻습니다."
+        },
+        {
+          "heading": "익명 처리",
+          "body": "응답은 연구자가 부여한 참여자 코드로만 식별되며, 이름·연락처·학번 등 개인을 식별할 수 있는 정보는 일절 수집하지 않습니다. 응답에는 개인정보를 적지 마세요."
+        },
+        {
+          "heading": "연구 목적 외 미사용",
+          "body": "수집된 자료는 이 연구의 분석과 학술적 발표 목적으로만 사용하며, 그 외 다른 목적으로 사용하거나 제3자에게 제공하지 않습니다."
+        },
+        {
+          "heading": "언제든 중단 가능",
+          "body": "참여는 전적으로 자발적이며, 언제든 불이익 없이 중단할 수 있습니다. 중단하더라도 이미 제출된 응답 외에는 아무런 자료가 남지 않습니다."
+        }
+      ],
+      "checkbox": "위 내용을 읽고 이해했으며, 자발적으로 본 연구에 참여하는 데 동의합니다.",
+      "privacyNote": "이름·연락처 등 개인정보를 적지 마세요."
+    },
+    "expert": {
+      "title": "전문가 평가 안내 및 동의",
+      "intro": "본 연구는 생성형 이미지 AI로 제작한 룩북 이미지와 제작 프레임워크를 전문가 관점에서 평가합니다. 아래 내용을 읽고 동의해 주세요.",
+      "sections": [
+        {
+          "heading": "연구 목적",
+          "body": "생성형 이미지 AI를 활용한 룩북 제작 결과물과 사람–AI 협업 프레임워크의 타당성·실무 적용 가능성을 전문가 관점에서 평가하기 위한 학술 연구입니다."
+        },
+        {
+          "heading": "소요 시간",
+          "body": "전체 약 15~25분이 걸립니다. 제시되는 자극 세트를 평가하고, 제작 프레임워크에 대해 응답합니다."
+        },
+        {
+          "heading": "수집 항목",
+          "body": "배경 정보(분야, 경력 연차), 자극 세트별 루브릭 평가(인물 일관성·의상 충실도·배경·톤 조화·룩북 활용 가능성)와 선택 의견, 프레임워크 평가(단계 구분의 타당성·실무 적용 가능성·사람–AI 역할 구분의 명확성)와 주관식 2문항을 수집합니다."
+        },
+        {
+          "heading": "익명 처리",
+          "body": "응답은 연구자가 부여한 전문가 코드로만 식별되며, 이름·연락처 등 개인을 식별할 수 있는 정보는 일절 수집하지 않습니다."
+        },
+        {
+          "heading": "연구 목적 외 미사용",
+          "body": "수집된 자료는 이 연구의 분석과 학술적 발표 목적으로만 사용하며, 그 외 다른 목적으로 사용하거나 제3자에게 제공하지 않습니다."
+        },
+        {
+          "heading": "언제든 중단 가능",
+          "body": "참여는 전적으로 자발적이며, 언제든 불이익 없이 중단할 수 있습니다."
+        }
+      ],
+      "checkbox": "위 내용을 읽고 이해했으며, 자발적으로 본 연구의 전문가 평가에 참여하는 데 동의합니다.",
+      "privacyNote": "이름·연락처 등 개인정보를 적지 마세요."
+    }
+  },
+  "background": {
+    "user": [
+      {
+        "id": "bg_major",
+        "type": "single",
+        "label": "디자인 전공 여부",
+        "required": true,
+        "options": [
+          {
+            "value": "major",
+            "label": "전공"
+          },
+          {
+            "value": "nonmajor",
+            "label": "비전공"
+          }
+        ]
+      },
+      {
+        "id": "bg_career",
+        "type": "single",
+        "label": "패션·디자인 실무 경력 구간",
+        "required": true,
+        "options": [
+          {
+            "value": "none",
+            "label": "없음"
+          },
+          {
+            "value": "lt1y",
+            "label": "1년 미만"
+          },
+          {
+            "value": "1to3y",
+            "label": "1~3년"
+          },
+          {
+            "value": "gte3y",
+            "label": "3년 이상"
+          }
+        ]
+      },
+      {
+        "id": "bg_ai_freq",
+        "type": "scale",
+        "label": "생성형 이미지 AI 사용 빈도",
+        "required": true,
+        "min": 1,
+        "max": 5,
+        "labels": {
+          "1": "전혀 사용하지 않음",
+          "3": "보통",
+          "5": "거의 매일 사용"
+        }
+      }
+    ],
+    "expert": [
+      {
+        "id": "bg_field",
+        "type": "single",
+        "label": "분야",
+        "required": true,
+        "options": [
+          {
+            "value": "fashion",
+            "label": "패션 디자인"
+          },
+          {
+            "value": "photo",
+            "label": "화보·촬영"
+          },
+          {
+            "value": "md_branding",
+            "label": "MD·브랜딩"
+          },
+          {
+            "value": "etc",
+            "label": "기타"
+          }
+        ]
+      },
+      {
+        "id": "bg_career",
+        "type": "single",
+        "label": "경력 연차 구간",
+        "required": true,
+        "options": [
+          {
+            "value": "lt3y",
+            "label": "3년 미만"
+          },
+          {
+            "value": "3to5y",
+            "label": "3~5년"
+          },
+          {
+            "value": "5to10y",
+            "label": "5~10년"
+          },
+          {
+            "value": "gte10y",
+            "label": "10년 이상"
+          }
+        ]
+      }
+    ]
+  },
+  "userTasks": {
+    "stepTitles": [
+      "첫 번째 과업",
+      "두 번째 과업"
+    ],
+    "intro": "방금 완료한 과업의 결과물을 떠올리며 응답해 주세요. 정답은 없으며, 느낀 대로 답해 주시면 됩니다.",
+    "blocks": [
+      {
+        "id": "consistency",
+        "kind": "likert",
+        "title": "지각된 일관성",
+        "description": "생성된 룩북 이미지가 얼마나 일관되게 느껴졌는지 평가해 주세요.",
+        "min": 1,
+        "max": 7,
+        "labels": {
+          "1": "전혀 그렇지 않다",
+          "7": "매우 그렇다"
+        },
+        "items": [
+          {
+            "id": "consist_1",
+            "ko": "컷마다 등장인물이 같은 사람으로 보였다."
+          },
+          {
+            "id": "consist_2",
+            "ko": "얼굴과 헤어스타일이 컷 간에 유지되었다."
+          },
+          {
+            "id": "consist_3",
+            "ko": "의상이 컷 간에 충실하게 유지되었다."
+          },
+          {
+            "id": "consist_4",
+            "ko": "전체적으로 한 편의 룩북처럼 통일감이 있었다."
+          }
+        ]
+      },
+      {
+        "id": "tlx",
+        "kind": "slider",
+        "title": "과업 부담감 (NASA-TLX Raw)",
+        "description": "방금 과업을 수행하며 느낀 부담을 각 항목 0~100 사이에서 5단위로 표시해 주세요. 각 슬라이더를 한 번 이상 움직여 응답해 주세요.",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "labels": {
+          "0": "낮음",
+          "100": "높음"
+        },
+        "items": [
+          {
+            "id": "tlx_1",
+            "label": "정신적 요구 (Mental Demand)",
+            "ko": "정신적·지각적 활동이 얼마나 필요했습니까(예: 사고, 판단, 계산, 기억, 탐색 등)? 과업이 쉬웠는지 힘들었는지, 단순했는지 복잡했는지 평가해 주세요.",
+            "en": "How much mental and perceptual activity was required (e.g., thinking, deciding, calculating, remembering, looking, searching, etc.)? Was the task easy or demanding, simple or complex, exacting or forgiving?"
+          },
+          {
+            "id": "tlx_2",
+            "label": "신체적 요구 (Physical Demand)",
+            "ko": "신체적 활동이 얼마나 필요했습니까(예: 밀기, 당기기, 돌리기, 조작, 작동 등)? 과업이 쉬웠는지 힘들었는지, 느렸는지 빨랐는지, 편안했는지 고됐는지 평가해 주세요.",
+            "en": "How much physical activity was required (e.g., pushing, pulling, turning, controlling, activating, etc.)? Was the task easy or demanding, slow or brisk, slack or strenuous, restful or laborious?"
+          },
+          {
+            "id": "tlx_3",
+            "label": "시간적 요구 (Temporal Demand)",
+            "ko": "과업이나 과업 요소가 진행되는 속도 때문에 시간 압박을 얼마나 느꼈습니까? 속도가 느긋했는지 빠르고 정신없었는지 평가해 주세요.",
+            "en": "How much time pressure did you feel due to the pace at which the tasks or task elements occurred? Was the pace slow and leisurely or rapid and frantic?"
+          },
+          {
+            "id": "tlx_4",
+            "label": "수행도 (Performance)",
+            "ko": "연구자(또는 본인)가 제시한 과업 목표를 얼마나 성공적으로 달성했다고 생각합니까? 그 목표 달성에 얼마나 만족했습니까?",
+            "en": "How successful do you think you were in accomplishing the goals of the task set by the experimenter (or yourself)? How satisfied were you with your performance in accomplishing these goals?"
+          },
+          {
+            "id": "tlx_5",
+            "label": "노력 (Effort)",
+            "ko": "목표한 수행 수준에 도달하기 위해 (정신적·신체적으로) 얼마나 힘을 쏟아야 했습니까?",
+            "en": "How hard did you have to work (mentally and physically) to accomplish your level of performance?"
+          },
+          {
+            "id": "tlx_6",
+            "label": "좌절감 (Frustration Level)",
+            "ko": "과업 중 얼마나 불안하고 낙담하고 짜증나고 스트레스를 받았는지, 혹은 얼마나 안심되고 만족스럽고 편안했는지 평가해 주세요.",
+            "en": "How insecure, discouraged, irritated, stressed and annoyed versus secure, gratified, content, relaxed and complacent did you feel during the task?"
+          }
+        ]
+      },
+      {
+        "id": "sus",
+        "kind": "likert",
+        "title": "시스템 사용성 (SUS)",
+        "description": "과업에 사용한 시스템/도구에 대한 의견입니다. 각 문항에 1~5로 응답해 주세요.",
+        "min": 1,
+        "max": 5,
+        "labels": {
+          "1": "전혀 그렇지 않다",
+          "5": "매우 그렇다"
+        },
+        "items": [
+          {
+            "id": "sus_1",
+            "en": "I think that I would like to use this system frequently.",
+            "ko": "나는 이 시스템을 자주 사용하고 싶다."
+          },
+          {
+            "id": "sus_2",
+            "en": "I found the system unnecessarily complex.",
+            "ko": "이 시스템은 불필요하게 복잡하다고 느꼈다."
+          },
+          {
+            "id": "sus_3",
+            "en": "I thought the system was easy to use.",
+            "ko": "이 시스템은 사용하기 쉽다고 생각했다."
+          },
+          {
+            "id": "sus_4",
+            "en": "I think that I would need the support of a technical person to be able to use this system.",
+            "ko": "이 시스템을 사용하려면 기술 지원이 필요할 것 같다."
+          },
+          {
+            "id": "sus_5",
+            "en": "I found the various functions in this system were well integrated.",
+            "ko": "이 시스템의 여러 기능이 잘 통합되어 있다고 느꼈다."
+          },
+          {
+            "id": "sus_6",
+            "en": "I thought there was too much inconsistency in this system.",
+            "ko": "이 시스템에는 일관성 없는 부분이 너무 많다고 생각했다."
+          },
+          {
+            "id": "sus_7",
+            "en": "I would imagine that most people would learn to use this system very quickly.",
+            "ko": "대부분의 사람이 이 시스템을 매우 빠르게 배울 것이라고 생각한다."
+          },
+          {
+            "id": "sus_8",
+            "en": "I found the system very cumbersome to use.",
+            "ko": "이 시스템은 사용하기 매우 번거롭다고 느꼈다."
+          },
+          {
+            "id": "sus_9",
+            "en": "I felt very confident using the system.",
+            "ko": "이 시스템을 사용할 때 매우 자신감을 느꼈다."
+          },
+          {
+            "id": "sus_10",
+            "en": "I needed to learn a lot of things before I could get going with this system.",
+            "ko": "이 시스템을 사용하기 전에 많은 것을 배워야 했다."
+          }
+        ]
+      },
+      {
+        "id": "csi",
+        "kind": "scale",
+        "title": "창의성 지원 (CSI)",
+        "description": "과업에 사용한 시스템/도구가 창의적 작업을 얼마나 지원했는지 평가해 주세요. 각 문항을 0(전혀 그렇지 않다)에서 10(매우 그렇다) 사이로 응답해 주세요.",
+        "min": 0,
+        "max": 10,
+        "scaleNote": "0 = 전혀 그렇지 않다, 10 = 매우 그렇다",
+        "items": [
+          {
+            "id": "csi_1",
+            "factor": "Collaboration",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_2",
+            "factor": "Collaboration",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_3",
+            "factor": "Enjoyment",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_4",
+            "factor": "Enjoyment",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_5",
+            "factor": "Exploration",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_6",
+            "factor": "Exploration",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_7",
+            "factor": "Expressiveness",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_8",
+            "factor": "Expressiveness",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_9",
+            "factor": "Immersion",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_10",
+            "factor": "Immersion",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_11",
+            "factor": "Results Worth Effort",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          },
+          {
+            "id": "csi_12",
+            "factor": "Results Worth Effort",
+            "en": "[원문 확인 필요]",
+            "ko": "[원문 확인 필요]"
+          }
+        ]
+      }
+    ]
+  },
+  "final": {
+    "title": "마지막 질문",
+    "preference": {
+      "id": "final_pref",
+      "type": "single",
+      "label": "두 과업 중 더 선호한 과업은 무엇입니까?",
+      "required": true,
+      "options": [
+        {
+          "value": "first",
+          "label": "첫 번째 과업"
+        },
+        {
+          "value": "second",
+          "label": "두 번째 과업"
+        },
+        {
+          "value": "same",
+          "label": "비슷함 / 같음"
+        }
+      ]
+    },
+    "open": [
+      {
+        "id": "final_pref_reason",
+        "label": "그렇게 선택한 이유를 적어 주세요.",
+        "maxLength": 1000,
+        "required": true
+      },
+      {
+        "id": "final_open_1",
+        "label": "사람이 꼭 판단해야 했던 지점은 무엇이었나요?",
+        "maxLength": 1000,
+        "required": true
+      },
+      {
+        "id": "final_open_2",
+        "label": "AI에 맡겨도 됐다고 느낀 지점은 무엇이었나요?",
+        "maxLength": 1000,
+        "required": true
+      },
+      {
+        "id": "final_open_3",
+        "label": "일관성이 깨졌을 때 어떻게 대응했나요?",
+        "maxLength": 1000,
+        "required": true
+      }
+    ]
+  },
+  "expert": {
+    "rubric": {
+      "title": "자극 평가",
+      "description": "제시된 이미지 세트를 보고 각 항목을 1~5로 평가해 주세요.",
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "전혀 아니다",
+        "5": "매우 그렇다"
+      },
+      "items": [
+        {
+          "id": "p1",
+          "label": "인물 일관성"
+        },
+        {
+          "id": "p2",
+          "label": "의상 충실도"
+        },
+        {
+          "id": "p3",
+          "label": "배경·톤 조화"
+        },
+        {
+          "id": "p4",
+          "label": "룩북 활용 가능성"
+        },
+        {
+          "id": "p5",
+          "label": "의도하지 않은 속성의 전달 (원치 않는 액세서리·요소가 컷 사이에 따라오지 않음)"
+        }
+      ],
+      "opinionLabel": "이 세트에 대한 추가 의견 (선택)",
+      "opinionPlaceholder": "이미지에 대해 자유롭게 적어 주세요."
+    },
+    "framework": {
+      "title": "프레임워크 평가",
+      "image": "",
+      "description": "이 프레임워크는 룩북 한 세트를 ① 아웃핏 → ② 모델 → ③ 장소의 세 단계로 나누어 만듭니다. 각 단계에서 정해진 것은 다음 단계로 넘어가며 고정됩니다. 머리색·톤처럼 말로 지정할 수 있는 속성은 프롬프트 템플릿으로 고정하고, 얼굴·헤어 형태처럼 말로 지정하기 어려운 속성은 앞 단계의 결과 이미지를 다음 단계에 그대로 넘겨 이어받게 합니다. 사람은 각 단계에서 선택지를 고르고 결과를 확인해 다음 단계로 넘길 것을 정하며, AI는 그 지정에 따라 이미지를 생성·합성합니다. 아래 평가는 이 구성을 기준으로 합니다.",
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "전혀 아니다",
+        "5": "매우 그렇다"
+      },
+      "items": [
+        {
+          "id": "fw_1",
+          "label": "단계 구분의 타당성"
+        },
+        {
+          "id": "fw_2",
+          "label": "실무 적용 가능성"
+        },
+        {
+          "id": "fw_3",
+          "label": "사람–AI 역할 구분의 명확성"
+        }
+      ],
+      "open": [
+        {
+          "id": "fw_open_1",
+          "label": "실무에 쓰려면 바뀌어야 할 점",
+          "maxLength": 1000,
+          "required": true
+        },
+        {
+          "id": "fw_open_2",
+          "label": "빠진 단계",
+          "maxLength": 1000,
+          "required": true
+        }
+      ]
+    }
+  },
+  "stimuli": [
+    {
+      "id": "S1",
+      "label": "세트 1",
+      "images": []
+    },
+    {
+      "id": "S2",
+      "label": "세트 2",
+      "images": []
+    }
+  ]
+}

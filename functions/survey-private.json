@@ -1,0 +1,4 @@
+{
+  "conditions": { "A": "참조", "B": "승계" },
+  "stimulusConditions": { "S1": "A", "S2": "B" }
+}

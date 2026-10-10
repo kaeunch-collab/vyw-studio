@@ -10,6 +10,9 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const crypto = require('node:crypto');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { validateSubmission, MAX_BODY_BYTES } = require('./survey-schema');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 const PASSWORD_HASH = defineSecret('PASSWORD_HASH'); // 형식: saltHex:hashHex
@@ -47,6 +50,46 @@ function verifyPassword(password, stored) {
   return derived.length === expected.length && crypto.timingSafeEqual(derived, expected);
 }
 const send = (res, code, obj) => res.status(code).set('Content-Type', 'application/json').send(JSON.stringify(obj));
+
+// ---------- Firestore (firebase-admin 모듈식 API) ----------
+let _db = null;
+function db() {
+  if (!_db) {
+    initializeApp(); // Cloud Functions 에서는 FIREBASE_CONFIG / ADC 를 사용
+    _db = getFirestore();
+  }
+  return _db;
+}
+
+// ---------- 설문 CSV ----------
+function csvCell(v) {
+  if (v === null || v === undefined) return '';
+  let s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+  // 공백/제어문자로 수식 접두사를 숨기는 경우도 텍스트로 내보낸다.
+  if (/^[\s\u0000-\u001f]*[=+\-@]/.test(s)) s = "'" + s;
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function tsToIso(v) {
+  try {
+    if (v && typeof v.toDate === 'function') return v.toDate().toISOString();
+    if (typeof v === 'string') return v;
+  } catch { /* ignore */ }
+  return '';
+}
+function buildCsv(rows) {
+  const base = ['role', 'code', 'clientStartedAt', 'createdAt'];
+  const answerCols = new Set();
+  rows.forEach((r) => Object.keys((r && r.answers) || {}).forEach((k) => answerCols.add(k)));
+  const cols = base.concat(Array.from(answerCols).sort());
+  const lines = [cols.map(csvCell).join(',')];
+  rows.forEach((r) => {
+    const a = (r && r.answers) || {};
+    const line = [r.role, r.code, r.clientStartedAt || '', tsToIso(r.createdAt)];
+    cols.slice(base.length).forEach((k) => line.push(Object.prototype.hasOwnProperty.call(a, k) ? a[k] : ''));
+    lines.push(line.map(csvCell).join(','));
+  });
+  return '\uFEFF' + lines.join('\r\n') + '\r\n'; // UTF-8 BOM
+}
 
 // ---------- 함수 ----------
 exports.api = onRequest(
@@ -91,8 +134,62 @@ exports.api = onRequest(
         return send(res, 200, { b64 });
       }
 
+      // 연구 설문 제출 (인증 불필요, 서버에서 재검증)
+      if (req.method === 'POST' && (path === '/survey' || path === '/api/survey')) {
+        const contentLength = Number(req.get('content-length') || 0);
+        if (contentLength && contentLength > MAX_BODY_BYTES) return send(res, 413, { error: '요청이 너무 큽니다.' });
+        let rawLen;
+        try { rawLen = Buffer.isBuffer(req.rawBody) ? req.rawBody.length : Buffer.byteLength(JSON.stringify(req.body || {})); }
+        catch { rawLen = MAX_BODY_BYTES + 1; }
+        if (rawLen > MAX_BODY_BYTES) return send(res, 413, { error: '요청이 너무 큽니다.' });
+
+        const v = validateSubmission(req.body || {});
+        if (!v.ok) return send(res, 400, { error: '요청 형식이 올바르지 않습니다.' });
+
+        try {
+          const ref = db().collection('surveyResponses').doc(v.doc.role + '_' + v.doc.code);
+          await ref.create({
+            role: v.doc.role,
+            code: v.doc.code,
+            answers: v.doc.answers,
+            clientStartedAt: v.doc.clientStartedAt,
+            schemaVersion: 1,
+            consent: true,
+            createdAt: FieldValue.serverTimestamp(), // userAgent·IP 저장 안 함
+          });
+        } catch (e) {
+          if (e && e.code === 6) return send(res, 409, { error: '이미 제출된 응답이 있습니다.' }); // ALREADY_EXISTS
+          return send(res, 500, { error: 'server error' });
+        }
+        return send(res, 200, { ok: true });
+      }
+
+      // 연구 설문 CSV 내보내기 (기존 Bearer 토큰 필요)
+      if (req.method === 'GET' && (path === '/survey/export' || path === '/api/survey/export')) {
+        const auth = req.get('Authorization') || '';
+        const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+        if (token.split('.').length !== 2 || !verifyToken(token, TOKEN_SECRET.value())) return send(res, 401, { error: '로그인이 필요합니다(토큰 만료/무효).' });
+
+        const role = req.query && req.query.role;
+        if (role !== 'user' && role !== 'expert') return send(res, 400, { error: 'role 값이 올바르지 않습니다.' });
+        try {
+          const snap = await db().collection('surveyResponses').where('role', '==', role).get();
+          const rows = snap.docs.map((d) => d.data());
+          rows.sort((a, b) => String(tsToIso(a.createdAt)).localeCompare(String(tsToIso(b.createdAt))));
+          res.status(200).set('Content-Type', 'text/csv; charset=utf-8');
+          res.set('Cache-Control', 'no-store');
+          res.set('Content-Disposition', `attachment; filename="survey_${role}.csv"`);
+          return res.send(buildCsv(rows));
+        } catch (e) {
+          return send(res, 500, { error: 'server error' });
+        }
+      }
+
       return send(res, 404, { error: 'not found' });
     } catch (e) {
+      if (path === '/survey' || path === '/api/survey' || path === '/survey/export' || path === '/api/survey/export') {
+        return send(res, 500, { error: 'server error' });
+      }
       return send(res, 500, { error: 'server error', detail: String((e && e.message) || e) });
     }
   }

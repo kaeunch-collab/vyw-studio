@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>VYW — 연구 설문</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link rel="stylesheet" href="/brand.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard (브랜드 표준 본문/디스플레이 폰트) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+    <!-- Tailwind Custom Configuration for VYW Palette -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vyw: {
+                            pink: '#EAC6D5',
+                            glass: '#D4CCDD',
+                            cool: '#9B8FB0',
+                            deep: '#4A3F5C',
+                            white: '#F3ECEE',
+                            chrome: '#C1C1CD',
+                            dark: '#2D2536',
+                            charcoal: '#1A1420'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard Variable', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        serif: ['Hahmlet', 'Pretendard Variable', 'Pretendard', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @font-face {
+            font-family: 'Hahmlet';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: local('Hahmlet SemiBold'), local('Hahmlet-SemiBold'),
+                 url('/assets/fonts/Hahmlet-SemiBold.woff2') format('woff2');
+        }
+        body {
+            background-color: #120D17;
+            color: #F3ECEE;
+            font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-image: radial-gradient(circle at 50% 10%, #2A1F35 0%, #120D17 60%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1A1420; }
+        ::-webkit-scrollbar-thumb { background: #4A3F5C; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9B8FB0; }
+
+        .magazine-card {
+            overflow-wrap: anywhere;
+            background: rgba(45, 37, 54, 0.4);
+            border: 1px solid rgba(212, 204, 221, 0.15);
+            backdrop-filter: blur(16px);
+        }
+        .choice {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0.42rem 0.6rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(212, 204, 221, 0.22);
+            background: rgba(26, 20, 32, 0.5);
+            color: #F3ECEE;
+            font-size: 0.88rem;
+            line-height: 1.1;
+            transition: all 0.15s ease;
+        }
+        .choice:hover { border-color: rgba(234, 198, 213, 0.55); }
+        .choice.is-selected {
+            background: rgba(234, 198, 213, 0.92);
+            color: #2D2536;
+            border-color: #EAC6D5;
+            font-weight: 600;
+        }
+        input[type=range] { accent-color: #EAC6D5; height: 1.6rem; }
+        textarea { resize: vertical; }
+        input[type=range] { min-width: 0; }
+        .survey-nav { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="app"></div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var qs = new URLSearchParams(window.location.search);
+        var role = qs.get('role') || '';
+        var code = qs.get('code') || '';
+        var app = document.getElementById('app');
+
+        var CODE_RE = { user: /^P\d{2}-(AB|BA)$/, expert: /^E\d{2}$/ };
+
+        // ---------- fail-closed: role/code 형식이 틀리면 안내만 보여준다 ----------
+        if (qs.getAll('role').length !== 1 || qs.getAll('code').length !== 1 ||
+            !Object.prototype.hasOwnProperty.call(CODE_RE, role) ||
+            code.length !== (role === 'user' ? 6 : 3) || !CODE_RE[role].test(code)) {
+            app.innerHTML = '<div class="min-h-screen flex items-center justify-center px-6">' +
+                '<div class="magazine-card rounded-3xl p-8 max-w-md w-full text-center">' +
+                '<h1 class="font-serif text-xl text-vyw-pink leading-relaxed">연구자에게 받은 링크로 접속해 주세요</h1>' +
+                '</div></div>';
+            return;
+        }
+
+        var STORAGE_KEY = 'vyw_survey_' + role + '_' + code;
+        var cfg = null;
+        var steps = [];
+        var stimulusSets = [];
+        var submitting = false;
+        var state = {
+            role: role,
+            code: code,
+            answers: {},
+            touched: {},
+            consent: false,
+            step: 0,
+            clientStartedAt: Date.now(),
+            submitted: false,
+            stimuliOrder: []
+        };
+
+        // ---------- 유틸 ----------
+        function esc(s) {
+            return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function answered(key) {
+            var v = state.answers[key];
+            return v !== undefined && v !== null && String(v).trim() !== '';
+        }
+        function saveState() {
+            try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* 저장 불가 시 무시 */ }
+        }
+        function loadState() {
+            try {
+                var raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                var s = JSON.parse(raw);
+                if (!s || s.role !== role || s.code !== code) return;
+                state.answers = (s.answers && typeof s.answers === 'object' && !Array.isArray(s.answers)) ? s.answers : {};
+                state.touched = (s.touched && typeof s.touched === 'object' && !Array.isArray(s.touched)) ? s.touched : {};
+                state.consent = s.consent === true;
+                state.step = Number.isInteger(s.step) && s.step >= 0 ? s.step : 0;
+                state.clientStartedAt = Number.isFinite(s.clientStartedAt) && s.clientStartedAt >= 0 && s.clientStartedAt <= Date.now() ? s.clientStartedAt : Date.now();
+                state.stimuliOrder = Array.isArray(s.stimuliOrder) ? s.stimuliOrder : [];
+            } catch (e) { /* 손상된 저장값은 무시하고 처음부터 */ }
+        }
+        function clearState() {
+            try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) { /* 무시 */ }
+        }
+        function sanitizeState() {
+            var rules = {};
+            (cfg.background[role] || []).forEach(function (q) { rules[q.id] = q; });
+            if (role === 'user') {
+                for (var n = 1; n <= 2; n++) {
+                    (cfg.userTasks.blocks || []).forEach(function (b) {
+                        b.items.forEach(function (it) { rules['t' + n + '_' + it.id] = b; });
+                    });
+                }
+                rules[cfg.final.preference.id] = cfg.final.preference;
+                cfg.final.open.forEach(function (o) { rules[o.id] = o; });
+            } else {
+                cfg.stimuli.filter(function (s) { return s.images.length > 0; }).forEach(function (s) {
+                    cfg.expert.rubric.items.forEach(function (it) { rules['st_' + s.id + '_' + it.id] = cfg.expert.rubric; });
+                    rules['st_' + s.id + '_opinion'] = { maxLength: 1000 };
+                });
+                cfg.expert.framework.items.forEach(function (it) { rules[it.id] = cfg.expert.framework; });
+                cfg.expert.framework.open.forEach(function (o) { rules[o.id] = o; });
+            }
+            var clean = {}, touched = {};
+            Object.keys(rules).forEach(function (key) {
+                var r = rules[key], v = state.answers[key];
+                var valid = r.options ? r.options.some(function (o) { return o.value === v; }) :
+                    r.maxLength ? typeof v === 'string' && v.length <= r.maxLength :
+                    Number.isInteger(v) && v >= r.min && v <= r.max && (r.kind !== 'slider' || (v - r.min) % r.step === 0);
+                if (valid) {
+                    clean[key] = v;
+                    if (state.touched[key] === true) touched[key] = true;
+                }
+            });
+            state.answers = clean;
+            state.touched = touched;
+        }
+
+        // 코드에서 파생한 시드로 결정적 무작위 순서 만들기
+        function xmur3(str) {
+            var h = 1779033703 ^ str.length;
+            for (var i = 0; i < str.length; i++) {
+                h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+                h = (h << 13) | (h >>> 19);
+            }
+            return function () {
+                h = Math.imul(h ^ (h >>> 16), 2246822507);
+                h = Math.imul(h ^ (h >>> 13), 3266489909);
+                h ^= h >>> 16;
+                return h >>> 0;
+            };
+        }
+        function mulberry32(a) {
+            return function () {
+                a |= 0;
+                a = (a + 0x6D2B79F5) | 0;
+                var t = Math.imul(a ^ (a >>> 15), 1 | a);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+        }
+        function seededShuffle(arr, seedStr) {
+            var seed = xmur3(seedStr)();
+            var rand = mulberry32(seed);
+            var a = arr.slice();
+            for (var i = a.length - 1; i > 0; i--) {
+                var j = Math.floor(rand() * (i + 1));
+                var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+            }
+            return a;
+        }
+
+        // ---------- 화면 조각 ----------
+        function card(title, desc, inner) {
+            return '<section class="magazine-card rounded-3xl p-5 sm:p-6 mb-5">' +
+                (title ? '<h2 class="font-serif text-xl text-vyw-pink">' + esc(title) + '</h2>' : '') +
+                (desc ? '<p class="text-sm text-vyw-glass/70 leading-relaxed mt-1.5">' + esc(desc) + '</p>' : '') +
+                '<div>' + inner + '</div>' +
+                '</section>';
+        }
+        function choiceRow(key, min, max, labels, current, numeric) {
+            var h = '<div class="likert flex flex-wrap gap-3 mt-3">';
+            for (var v = min; v <= max; v++) {
+                var sel = current === v;
+                h += '<button type="button" class="choice' + (sel ? ' is-selected' : '') + '" data-key="' + esc(key) +
+                     '" data-value="' + v + '" data-num="' + (numeric ? '1' : '0') + '">' + v + '</button>';
+            }
+            h += '</div>';
+            if (labels) {
+                var lo = labels[String(min)];
+                var hi = labels[String(max)];
+                if (lo || hi) {
+                    h += '<div class="flex justify-between text-[11px] text-vyw-glass/45 mt-1.5"><span>' + esc(lo || '') +
+                         '</span><span>' + esc(hi || '') + '</span></div>';
+                }
+            }
+            return h;
+        }
+        function optionRow(key, options, current) {
+            var h = '<div class="flex flex-wrap gap-3 mt-3">';
+            (options || []).forEach(function (o) {
+                var sel = current === o.value;
+                h += '<button type="button" class="choice' + (sel ? ' is-selected' : '') + '" data-key="' + esc(key) +
+                     '" data-value="' + esc(o.value) + '" data-num="0">' + esc(o.label) + '</button>';
+            });
+            return h + '</div>';
+        }
+        function textArea(key, label, maxLength, value, note) {
+            var ml = maxLength || 1000;
+            var v = value === null || value === undefined ? '' : String(value);
+            return '<div class="mt-4">' +
+                (label ? '<label class="block text-sm text-vyw-white/90 mb-1.5" for="ta-' + esc(key) + '">' + esc(label) + '</label>' : '') +
+                '<textarea id="ta-' + esc(key) + '" data-key="' + esc(key) + '" maxlength="' + ml + '" rows="3" ' +
+                'class="w-full rounded-2xl bg-vyw-charcoal/50 border border-vyw-glass/20 p-3 text-sm text-vyw-white focus:border-vyw-pink/60 focus:outline-none" ' +
+                'placeholder="자유롭게 적어 주세요.">' + esc(v) + '</textarea>' +
+                '<div class="flex justify-between text-[11px] text-vyw-glass/45 mt-1"><span>' + esc(note || '') + '</span>' +
+                '<span id="count-' + esc(key) + '">' + v.length + ' / ' + ml + '</span></div>' +
+                '</div>';
+        }
+        function slider(key, block, value, touched) {
+            var val = typeof value === 'number' ? value : 50;
+            var lo = block.labels ? block.labels[String(block.min)] : '';
+            var hi = block.labels ? block.labels[String(block.max)] : '';
+            return '<div class="mt-3 flex items-center gap-3">' +
+                '<input type="range" data-key="' + esc(key) + '" min="' + block.min + '" max="' + block.max +
+                '" step="' + block.step + '" value="' + val + '" class="flex-1">' +
+                '<span id="out-' + esc(key) + '" class="font-mono text-sm text-vyw-pink w-10 text-right">' + val + '</span>' +
+                '</div>' +
+                '<div class="flex justify-between text-[11px] text-vyw-glass/45 mt-1"><span>' + esc(lo ? lo + ' (' + block.min + ')' : String(block.min)) +
+                '</span><span>' + esc(hi ? hi + ' (' + block.max + ')' : String(block.max)) + '</span></div>' +
+                (touched ? '' : '<p id="hint-' + esc(key) + '" class="text-[11px] text-vyw-pink/70 mt-1">슬라이더를 움직여 응답해 주세요.</p>');
+        }
+
+        function renderConsent() {
+            var c = cfg.consent[role] || {};
+            var h = '<section class="magazine-card rounded-3xl p-5 sm:p-6 mb-5 space-y-4">';
+            h += '<h1 class="font-serif text-2xl text-vyw-pink">' + esc(c.title || '연구 참여 안내 및 동의') + '</h1>';
+            if (c.intro) h += '<p class="text-sm text-vyw-glass/80 leading-relaxed">' + esc(c.intro) + '</p>';
+            h += '<div class="space-y-3">';
+            (c.sections || []).forEach(function (s) {
+                h += '<div><h2 class="text-sm font-semibold text-vyw-white">' + esc(s.heading) + '</h2>' +
+                     '<p class="text-sm text-vyw-glass/75 leading-relaxed mt-0.5">' + esc(s.body) + '</p></div>';
+            });
+            h += '</div>';
+            h += '<label class="flex items-start gap-3 rounded-2xl border border-vyw-glass/20 bg-vyw-charcoal/40 p-3 cursor-pointer">' +
+                 '<input id="consent-check" type="checkbox" class="mt-0.5 accent-vyw-pink" ' + (state.consent ? 'checked' : '') + '>' +
+                 '<span class="text-sm text-vyw-white/90 leading-relaxed">' + esc(c.checkbox || '동의합니다.') + '</span></label>';
+            if (c.privacyNote) h += '<p class="text-[11px] text-vyw-pink/70">' + esc(c.privacyNote) + '</p>';
+            h += '</section>';
+            return h;
+        }
+
+        function renderBackground() {
+            var inner = '';
+            (cfg.background[role] || []).forEach(function (q) {
+                var head = '<p class="text-sm font-semibold text-vyw-white">' + esc(q.label) + '</p>';
+                var ctl = q.type === 'single'
+                    ? optionRow(q.id, q.options, state.answers[q.id])
+                    : choiceRow(q.id, q.min, q.max, q.labels, state.answers[q.id], true);
+                inner += '<div class="py-4 border-b border-vyw-glass/10 last:border-0">' + head + ctl + '</div>';
+            });
+            return card('배경 정보', '해당하는 항목을 선택해 주세요.', inner);
+        }
+
+        function renderBlock(step) {
+            var b = step.block;
+            var n = step.task;
+            var inner = '';
+            (b.items || []).forEach(function (it) {
+                var key = 't' + n + '_' + it.id;
+                var head = '';
+                if (it.label) head += '<p class="text-sm font-semibold text-vyw-white">' + esc(it.label) + '</p>';
+                if (it.ko) head += '<p class="text-sm text-vyw-white/85 leading-relaxed">' + esc(it.ko) + '</p>';
+                if (it.en) head += '<p class="text-[11px] text-vyw-glass/45 leading-relaxed mt-1">' + esc(it.en) + '</p>';
+                if (it.factor) head += '<p class="text-[10px] font-mono uppercase tracking-wider text-vyw-cool/70 mt-1">' + esc(it.factor) + '</p>';
+                var ctl = b.kind === 'slider'
+                    ? slider(key, b, state.answers[key], state.touched[key])
+                    : choiceRow(key, b.min, b.max, b.labels, state.answers[key], true);
+                inner += '<div class="py-4 border-b border-vyw-glass/10 last:border-0">' + head + ctl + '</div>';
+            });
+            var head2 = '<div class="mb-1 space-y-1">' +
+                '<p class="font-mono text-[10px] tracking-[0.25em] text-vyw-cool uppercase">' + esc((cfg.userTasks.stepTitles || [])[n - 1] || ('과업 ' + n)) + '</p>' +
+                '<h2 class="font-serif text-xl text-vyw-pink">' + esc(b.title) + '</h2>' +
+                (b.description ? '<p class="text-sm text-vyw-glass/70 leading-relaxed">' + esc(b.description) + '</p>' : '') +
+                (b.scaleNote ? '<p class="text-[11px] text-vyw-glass/50">' + esc(b.scaleNote) + '</p>' : '') +
+                '</div>';
+            return '<section class="magazine-card rounded-3xl p-5 sm:p-6 mb-5">' + head2 + inner + '</section>';
+        }
+
+        function renderStimuliEmpty() {
+            return card('자극 평가', '', '<p class="text-sm text-vyw-glass/80 py-2">평가 이미지 준비 중</p>');
+        }
+
+        function renderStimulus(set) {
+            var r = cfg.expert.rubric;
+            var imgs = set.images || [];
+            var imgHtml = '<div class="grid grid-cols-2 gap-3">' + imgs.map(function (u) {
+                return '<img src="' + esc(u) + '" alt="평가 자극" loading="lazy" class="w-full rounded-xl border border-vyw-glass/15 object-cover">';
+            }).join('') + '</div>';
+            var inner = imgHtml;
+            (r.items || []).forEach(function (it) {
+                var key = 'st_' + set.id + '_' + it.id;
+                inner += '<div class="py-4 border-b border-vyw-glass/10"><p class="text-sm text-vyw-white/90">' + esc(it.label) + '</p>' +
+                         choiceRow(key, r.min, r.max, r.labels, state.answers[key], true) + '</div>';
+            });
+            var okey = 'st_' + set.id + '_opinion';
+            inner += textArea(okey, r.opinionLabel, 1000, state.answers[okey], (cfg.consent[role] || {}).privacyNote);
+            return card('자극 평가', (set.label || set.id) + ' — ' + (r.description || ''), inner);
+        }
+
+        function renderFramework() {
+            var f = cfg.expert.framework;
+            var inner = '';
+            if (f.image) {
+                inner += '<img src="' + esc(f.image) + '" alt="프레임워크 도식" class="w-full rounded-2xl border border-vyw-glass/15 mb-3">';
+                inner += '<p class="text-sm text-vyw-glass/70 leading-relaxed">' + esc(f.description) + '</p>';
+            } else {
+                inner += '<div class="rounded-2xl border border-vyw-glass/15 bg-vyw-charcoal/40 p-4">' +
+                         '<p class="text-sm text-vyw-glass/75 leading-relaxed">' + esc(f.description) + '</p></div>';
+            }
+            (f.items || []).forEach(function (it) {
+                inner += '<div class="py-4 border-b border-vyw-glass/10"><p class="text-sm text-vyw-white/90">' + esc(it.label) + '</p>' +
+                         choiceRow(it.id, f.min, f.max, f.labels, state.answers[it.id], true) + '</div>';
+            });
+            (f.open || []).forEach(function (o) {
+                inner += textArea(o.id, o.label, o.maxLength, state.answers[o.id], (cfg.consent[role] || {}).privacyNote);
+            });
+            return card(f.title, '프레임워크를 보고 각 항목을 평가해 주세요.', inner);
+        }
+
+        function renderFinal() {
+            var f = cfg.final;
+            var inner = '<p class="text-sm text-vyw-white/90">' + esc(f.preference.label) + '</p>' +
+                optionRow(f.preference.id, f.preference.options, state.answers[f.preference.id]);
+            (f.open || []).forEach(function (o) {
+                inner += textArea(o.id, o.label, o.maxLength, state.answers[o.id], (cfg.consent[role] || {}).privacyNote);
+            });
+            return card(f.title, '', inner);
+        }
+
+        function renderSubmit() {
+            var count = Object.keys(state.answers).length;
+            return card('제출 전 확인', '', '<p class="text-sm text-vyw-glass/80 leading-relaxed">응답을 제출하면 수정할 수 없으며, 같은 참여자 코드로 다시 제출할 수 없습니다.</p>' +
+                '<p class="text-xs text-vyw-glass/55 mt-2">현재 응답 항목 수: ' + count + '</p>');
+        }
+
+        function stepLabel(step) {
+            if (!step) return '';
+            if (step.type === 'consent') return '연구 안내·동의';
+            if (step.type === 'background') return '배경 정보';
+            if (step.type === 'block') return ((cfg.userTasks.stepTitles || [])[step.task - 1] || ('과업 ' + step.task)) + ' · ' + step.block.title;
+            if (step.type === 'stimulus' || step.type === 'stimuliEmpty') return '자극 평가';
+            if (step.type === 'framework') return '프레임워크 평가';
+            if (step.type === 'final') return '마지막 질문';
+            return '제출';
+        }
+
+        function renderBody(step) {
+            if (step.type === 'consent') return renderConsent();
+            if (step.type === 'background') return renderBackground();
+            if (step.type === 'block') return renderBlock(step);
+            if (step.type === 'stimuliEmpty') return renderStimuliEmpty();
+            if (step.type === 'stimulus') return renderStimulus(step.set);
+            if (step.type === 'framework') return renderFramework();
+            if (step.type === 'final') return renderFinal();
+            return renderSubmit();
+        }
+
+        function shell(step) {
+            var total = steps.length;
+            var pct = total > 1 ? Math.round((state.step / (total - 1)) * 100) : 100;
+            var last = state.step === total - 1;
+            app.innerHTML = '<div class="min-h-screen flex flex-col">' +
+                '<header class="sticky top-0 z-20 border-b border-vyw-glass/10 px-4 py-3 backdrop-blur-md bg-vyw-charcoal/50">' +
+                    '<div class="max-w-2xl mx-auto flex items-center gap-3">' +
+                        '<img src="/assets/logo-pink.png" alt="VYW" class="h-6 w-auto">' +
+                        '<span class="h-4 w-px bg-vyw-glass/20"></span>' +
+                        '<span class="font-mono text-[10px] tracking-[0.28em] text-vyw-glass/60 uppercase">Research Survey</span>' +
+                    '</div>' +
+                '</header>' +
+                '<main class="relative z-10 flex-1 w-full max-w-2xl mx-auto px-4 pt-6 pb-32">' +
+                    '<div class="mb-5">' +
+                        '<div class="flex items-center justify-between text-[11px] text-vyw-glass/50 mb-1.5">' +
+                            '<span>' + esc(stepLabel(step)) + '</span><span>' + (state.step + 1) + ' / ' + total + '</span></div>' +
+                        '<div class="h-1.5 rounded-full bg-vyw-glass/10 overflow-hidden">' +
+                            '<div class="h-full bg-vyw-pink/80 transition-all" style="width:' + pct + '%"></div></div>' +
+                    '</div>' +
+                    renderBody(step) +
+                '</main>' +
+                '<div class="survey-nav fixed bottom-0 inset-x-0 z-20 border-t border-vyw-glass/10 bg-vyw-charcoal/85 backdrop-blur-md">' +
+                    '<div class="max-w-2xl mx-auto px-4 py-3 flex gap-3">' +
+                        '<button id="btn-prev" class="flex-1 py-3 rounded-2xl border border-vyw-glass/20 text-sm text-vyw-glass hover:text-white hover:bg-vyw-cool/15 transition-all"' +
+                        (state.step === 0 ? ' disabled style="opacity:.4"' : '') + '>이전</button>' +
+                        '<button id="btn-next" class="flex-1 py-3 rounded-2xl bg-vyw-pink/90 text-vyw-dark font-semibold text-sm hover:bg-vyw-pink transition-all disabled:opacity-40 disabled:cursor-not-allowed">' +
+                        (last ? '제출' : '다음') + '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+            var prev = document.getElementById('btn-prev');
+            var next = document.getElementById('btn-next');
+            if (prev) prev.addEventListener('click', function () { go(-1); });
+            if (next) next.addEventListener('click', function () {
+                if (state.step === steps.length - 1) submitSurvey(); else go(1);
+            });
+            refreshNext();
+        }
+
+        // ---------- 상태/검증 ----------
+        function stepComplete(step) {
+            if (!step) return false;
+            if (step.type === 'consent') return state.consent === true;
+            if (step.type === 'background') {
+                return (cfg.background[role] || []).every(function (q) { return answered(q.id); });
+            }
+            if (step.type === 'block') {
+                return (step.block.items || []).every(function (it) {
+                    var key = 't' + step.task + '_' + it.id;
+                    if (step.block.kind === 'slider') return answered(key) && state.touched[key] === true;
+                    return answered(key);
+                });
+            }
+            if (step.type === 'stimuliEmpty') return true;
+            if (step.type === 'stimulus') {
+                return (cfg.expert.rubric.items || []).every(function (it) {
+                    return answered('st_' + step.set.id + '_' + it.id);
+                });
+            }
+            if (step.type === 'framework') {
+                var f = cfg.expert.framework;
+                var rated = (f.items || []).every(function (it) { return answered(it.id); });
+                var opens = (f.open || []).every(function (o) { return o.required === false || answered(o.id); });
+                return rated && opens;
+            }
+            if (step.type === 'final') {
+                var pref = answered('final_pref');
+                var opens2 = (cfg.final.open || []).every(function (o) { return o.required === false || answered(o.id); });
+                return pref && opens2;
+            }
+            return true;
+        }
+        function refreshNext() {
+            var btn = document.getElementById('btn-next');
+            if (btn) btn.disabled = !stepComplete(steps[state.step]);
+        }
+        function go(delta) {
+            if (submitting || (delta > 0 && (!state.consent || !stepComplete(steps[state.step])))) return;
+            state.step = Math.max(0, Math.min(steps.length - 1, state.step + delta));
+            saveState();
+            render();
+            window.scrollTo(0, 0);
+        }
+
+        function buildSteps() {
+            var list = [];
+            list.push({ type: 'consent' });
+            list.push({ type: 'background' });
+            if (role === 'user') {
+                for (var n = 1; n <= 2; n++) {
+                    (cfg.userTasks.blocks || []).forEach(function (b) {
+                        list.push({ type: 'block', task: n, block: b });
+                    });
+                }
+                list.push({ type: 'final' });
+            } else {
+                if (stimulusSets.length === 0) {
+                    list.push({ type: 'stimuliEmpty' });
+                } else {
+                    stimulusSets.forEach(function (s) { list.push({ type: 'stimulus', set: s }); });
+                }
+                list.push({ type: 'framework' });
+            }
+            list.push({ type: 'submit' });
+            return list;
+        }
+
+        // ---------- 렌더 ----------
+        function render() {
+            if (state.submitted) return renderDone();
+            if (state.step >= steps.length) state.step = steps.length - 1;
+            if (state.step < 0) state.step = 0;
+            for (var i = 0; i < state.step; i++) {
+                if (!stepComplete(steps[i])) { state.step = i; break; }
+            }
+            shell(steps[state.step]);
+        }
+        function renderDone() {
+            app.innerHTML = '<div class="min-h-screen flex items-center justify-center px-6">' +
+                '<div class="magazine-card rounded-3xl p-8 max-w-md w-full text-center space-y-3">' +
+                '<div class="w-12 h-12 mx-auto rounded-full bg-vyw-pink/20 border border-vyw-pink/50 flex items-center justify-center text-vyw-pink text-xl">✓</div>' +
+                '<h1 class="font-serif text-2xl text-vyw-pink">제출되었습니다</h1>' +
+                '<p class="text-sm text-vyw-glass/75 leading-relaxed">연구에 참여해 주셔서 감사합니다. 이 창을 닫으셔도 됩니다.</p>' +
+                '</div></div>';
+        }
+        function showSubmitMessage(msg) {
+            submitting = false;
+            var btn = document.getElementById('btn-next');
+            if (btn) { btn.disabled = false; btn.textContent = '제출'; }
+            var box = document.getElementById('submit-msg');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'submit-msg';
+                box.className = 'magazine-card rounded-2xl p-3 text-sm text-vyw-pink mb-4';
+                var main = app.querySelector('main');
+                if (main) main.insertBefore(box, main.firstChild);
+            }
+            box.textContent = msg;
+        }
+        function showFatal(msg) {
+            app.innerHTML = '<div class="min-h-screen flex items-center justify-center px-6">' +
+                '<div class="magazine-card rounded-3xl p-8 max-w-md w-full text-center space-y-4">' +
+                '<p class="text-sm text-vyw-glass/80">' + esc(msg) + '</p>' +
+                '<button id="retry" class="px-5 py-2.5 rounded-2xl bg-vyw-pink/90 text-vyw-dark font-semibold text-sm">다시 시도</button>' +
+                '</div></div>';
+            var b = document.getElementById('retry');
+            if (b) b.addEventListener('click', boot);
+        }
+
+        // ---------- 제출 ----------
+        function submitSurvey() {
+            if (submitting) return;
+            if (state.consent !== true || !steps.every(stepComplete)) {
+                render();
+                return;
+            }
+            submitting = true;
+            var btn = document.getElementById('btn-next');
+            if (btn) { btn.disabled = true; btn.textContent = '제출 중…'; }
+            var payload = {
+                role: role,
+                code: code,
+                consent: state.consent,
+                answers: state.answers,
+                clientStartedAt: new Date(state.clientStartedAt).toISOString()
+            };
+            fetch('/api/survey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (d) {
+                    return { status: r.status, data: d };
+                });
+            }).then(function (res) {
+                if (res.status === 200) {
+                    state.submitted = true;
+                    state.answers = {};
+                    clearState();
+                    render();
+                } else if (res.status === 409) {
+                    showSubmitMessage('이미 제출된 참여자 코드입니다. 연구자에게 문의해 주세요.');
+                } else {
+                    showSubmitMessage('제출에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+                }
+            }).catch(function () {
+                showSubmitMessage('제출에 실패했습니다. 네트워크 연결을 확인해 주세요.');
+            });
+        }
+
+        // ---------- 이벤트 ----------
+        app.addEventListener('click', function (e) {
+            var b = e.target.closest ? e.target.closest('button[data-key]') : null;
+            if (!b) return;
+            var key = b.getAttribute('data-key');
+            var val = b.getAttribute('data-num') === '1' ? Number(b.getAttribute('data-value')) : b.getAttribute('data-value');
+            state.answers[key] = val;
+            var parent = b.parentNode;
+            if (parent) {
+                var sibs = parent.querySelectorAll('button[data-key="' + key + '"]');
+                for (var i = 0; i < sibs.length; i++) sibs[i].classList.remove('is-selected');
+            }
+            b.classList.add('is-selected');
+            saveState();
+            refreshNext();
+        });
+        app.addEventListener('input', function (e) {
+            var t = e.target;
+            if (!t) return;
+            if (t.tagName === 'TEXTAREA' && t.getAttribute('data-key')) {
+                var key = t.getAttribute('data-key');
+                state.answers[key] = t.value;
+                var counter = document.getElementById('count-' + key);
+                if (counter) counter.textContent = t.value.length + ' / ' + (t.maxLength > 0 ? t.maxLength : 1000);
+                saveState();
+                refreshNext();
+                return;
+            }
+            if (t.type === 'range' && t.getAttribute('data-key')) {
+                var rkey = t.getAttribute('data-key');
+                state.answers[rkey] = Number(t.value);
+                state.touched[rkey] = true;
+                var out = document.getElementById('out-' + rkey);
+                if (out) out.textContent = t.value;
+                var hint = document.getElementById('hint-' + rkey);
+                if (hint && hint.parentNode) hint.parentNode.removeChild(hint);
+                saveState();
+                refreshNext();
+            }
+        });
+        app.addEventListener('change', function (e) {
+            var c = e.target;
+            if (c && c.id === 'consent-check') {
+                state.consent = c.checked === true;
+                saveState();
+                refreshNext();
+            }
+        });
+
+        // ---------- 시작 ----------
+        function start() {
+            loadState();
+            sanitizeState();
+            var allSets = Array.isArray(cfg.stimuli) ? cfg.stimuli : [];
+            var withImages = allSets.filter(function (s) { return s && Array.isArray(s.images) && s.images.length > 0; });
+            if (role === 'expert' && withImages.length > 0) {
+                stimulusSets = seededShuffle(withImages, 'stimuli:' + code);
+                state.stimuliOrder = stimulusSets.map(function (s) { return s.id; });
+            }
+            steps = buildSteps();
+            saveState();
+            render();
+        }
+        function boot() {
+            fetch('/r-xiyedm7aw0l/config.json', { cache: 'no-store' })
+                .then(function (r) { if (!r.ok) throw new Error('config'); return r.json(); })
+                .then(function (c) { cfg = c; start(); })
+                .catch(function () { showFatal('설문을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
+        }
+
+        boot();
+    })();
+    </script>
+</body>
+</html>
