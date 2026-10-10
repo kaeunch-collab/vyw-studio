@@ -17,7 +17,7 @@ vyw-studio/
 │   ├── lookbook.html      ← Gemini 룩북 생성기 (= 원본 vyw.html 복사본 + 네비 링크)
 │   ├── brand-bible.html   ← 브랜드 바이블 (= VYW_Brand_Bible.html 복사본 + 네비 링크)
 │   ├── brand.css          ← 디자인 시스템 (랜딩 페이지 스타일)
-│   ├── env.js             ← Gemini API 키 (git-ignored, 현재 placeholder)
+│   ├── env.js             ← 옛 키 placeholder (git-ignored, 룩북에서 로드하지 않음)
 │   ├── env.example.js     ← env.js 템플릿 + 키 노출 경고
 │   └── assets/            ← 웹 최적화 브랜드 이미지 (CSS/ 원본을 sips로 리사이즈)
 │       ├── logo-white|pink|purple.png  ← 워드마크 "W"+스파클 로고 (760px, 투명)
@@ -69,7 +69,7 @@ vyw-studio/
    - **① 옷 생성** (`#cloth`): Fragment 주제 + 장르 선택 → (무료)Pollinations flux / (Google AI)
      `gemini-2.5-flash-image` 텍스트→이미지로 흰 배경 플랫레이 콜라주(옷_ref 스타일, 모델 없음)
      생성, 카드로 누적. ※ Imagen 4.0은 무료 키로 접근 불가(유료 전용 400)라 옷 생성도 모델·배경과
-     같은 `gemini-2.5-flash-image`로 통일함(`imagenGenerate`는 미사용). Fragment·장르 데이터는
+     같은 `gemini-2.5-flash-image`로 통일함. Fragment·장르 데이터는
      `config/concepts.json`(fragments 3종 + genres 12종)을 lookbook의 `fragments`/`genres`
      객체에 임베드(dist에서 concepts.json을 직접 못 읽으므로 하드코딩).
      - Fragment 3종: 01 Afar/먼 곳, 02 Elsewhere/여기가 아닌 어딘가, 03 Faraway/멀리 있는.
@@ -80,22 +80,35 @@ vyw-studio/
        (`renderFragmentMood()`). 단순 텍스트만으로 톤을 알기 어려운 문제 해결용.
      - **생성 엔진 토글(`state.engine`, 3단계 공통):** 🆓 **무료(Pollinations/flux)** = API 키 불필요,
        기본값(`pollinationsGenerate()`, 브라우저에서 직접 fetch→base64, CORS 허용). ✨ **Google AI** =
-       Gemini/Imagen 키 필요. 토글 UI는 `.engine-selectors`/`.engine-note` 클래스로 세 단계에 공통
+       서버 프록시 로그인 필요. 토글 UI는 `.engine-selectors`/`.engine-note` 클래스로 세 단계에 공통
        렌더(`renderEngineSelectors()`). Pollinations 무료 티어는 IP당 동시 1건 제한이라 혼잡 시 402 →
-       백오프 재시도. **엔진 기본값은 키 유무로 자동 결정**: 키 있으면 Gemini(연속성), 없으면 무료
+       백오프 재시도. **엔진 기본값은 로그인 상태로 자동 결정**: 로그인했으면 Gemini(연속성), 아니면 무료
        (`initApiKey` + `userPickedEngine` 플래그 — 사용자가 토글을 누르면 자동 전환 중단).
+     - **시드 고정(`state.seedLocked`/`state.seed`, 3단계 공통):** 엔진 토글 옆 체크박스+정수 입력(0~2147483647).
+       잠그면 같은 시드를 전달하고, 풀면 매 생성마다 무작위 정수를 뽑아 입력값도 갱신. 실제 쓴 시드는 옷 카드 `seed` 필드·
+       `state.dressedSeed`/`state.finalSeed`에 기록되고 결과 아래 `seed 123`으로 표시(IndexedDB 저장/복원 포함).
    - **② 모델 착장** (`#model`): 옷 카드 선택 + 모델 사진 업로드(선택) + 포즈. **Google AI** =
      `gemini-2.5-flash-image:generateContent`(정식 모델, `-preview`는 deprecated) 이미지→이미지로
      **생성한 옷 콜라주를 그대로 입힘**(+모델사진 반영). **무료** = 장르·Fragment를 텍스트로 새로
      생성(`buildDressPromptText()`, 옷·인물 정합 미보장).
+     - 모델 참조가 있으면 얼굴·머리색·헤어스타일·시선을 규정하지 않는 `brandCoreSubjectStyleOnly`를 쓰고
+       "keep her face, hair color, hairstyle, body proportions and likeness exactly as in that reference"로
+       likeness 보존을 지시한다. 참조가 있으면 체형 강제와 프리셋 시선 지시도 생략(없으면 기존 `brandCoreSubject`).
+     - **모델 승계:** 직전 착장 컷이 있으면 "직전 착장 컷을 모델로 사용" 버튼으로 `state.modelRefDataUrl`에
+       승계(`state.modelRefSource='upload'|'inherited'`, IndexedDB 포함). 무료 엔진은 이미지 입력이 없어
+       버튼 옆에 "Google AI에서만 반영" 안내.
    - **③ 배경 삽입** (`#bg`): 기본 스튜디오 배경/업로드(선택). **Google AI** = Gemini로 **착장 컷의
      인물·옷·포즈를 그대로 두고 배경만 교체**. **무료** = 전체 컷 재생성(`buildFinalPromptText()`).
-   - **종횡비:** 전 단계 세로 3:4 고정 — 무료 768×1024, Gemini는 `generationConfig.imageConfig.aspectRatio:"3:4"`
-     (미지정 시 1:1로 나와 비율 깨짐). 프롬프트도 "full-length head-to-toe 3:4"로 전신·비율 강제.
-   - ⚠️ 키 없는 *진짜* 이미지→이미지는 불가(Pollinations 편집 모델 `kontext`는 유료 전용, 무료는
-     `sana` text→image만). **무료 모드는 단계마다 새로 생성돼 옷·모델이 달라짐(연속성은 Gemini 전용).**
+     실제 사용한 시드는 `state.finalSeed`에 기록되고 결과 아래 `seed 123`으로 표시.
+   - **종횡비:** 전 단계 정사각 1:1 고정 — 무료는 `pollinationsGenerate(..., 1024, 1024)`, Gemini는
+     `generationConfig.imageConfig.aspectRatio:"1:1"`. 프롬프트도 "Square 1:1 … balanced square composition"으로
+     정사각 구도를 강제한다.
+   - 무료 경로는 `model=flux`로 text→image만 요청하고 업로드 이미지를 전송하지 않는다.
+     **무료 모드는 단계마다 새로 생성돼 옷·모델이 달라짐(연속성은 Gemini 전용).**
    - 단계 간 생성 이미지는 JS 메모리(`state`)로 전달. 설계: `docs/superpowers/specs/2026-06-15-lookbook-3step-pipeline-design.md`.
-   - 키 우선순위: `window.ENV_API_KEY`(env.js) → localStorage → 인앱 "API 설정" 모달
+   - **Google AI 인증:** 별도 키 우선순위가 아니라 서버 프록시 로그인 방식 — `localStorage(vyw_auth)`의 7일
+     Bearer 토큰으로 `geminiEdit()`가 `/api/gemini`를 호출하고, Functions가 서버 시크릿 `GEMINI_API_KEY`로
+     Gemini를 호출한다(인앱 "로그인" 모달 → `POST /api/login`). `window.ENV_API_KEY`·구 "API 설정" 모달은 미사용.
    - **폰트:** 본문/UI = Pretendard, **제목(모든 헤딩) = Hahmlet SemiBold(명조 세리프, 한글+라틴)**.
      원본 `.otf`는 루트 `font/`에 보관, 웹용은 fonttools로 woff2 변환해 `dist/assets/fonts/Hahmlet-SemiBold.woff2`
      (277KB)로 자체 호스팅 → `@font-face`. Tailwind `serif`/`playfair` 토큰이 Hahmlet을 가리킴.
@@ -176,7 +189,7 @@ firebase deploy
 **로컬 테스트:** `functions/.secret.local`(dotenv: 위 3개 KEY=값) 작성 → `cd functions && npm install`
 → 루트에서 `firebase emulators:start` (hosting+functions 로컬). `file://`로 직접 열면 `/api/*` 없어 로그인 불가.
 
-- `dist/env.js`(옛 클라이언트 키 placeholder)는 이제 미사용(무해하게 남겨둠).
+- `dist/env.js`(옛 클라이언트 키 placeholder)는 룩북에서 로드하지 않는다.
 
 ---
 

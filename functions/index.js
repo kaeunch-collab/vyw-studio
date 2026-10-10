@@ -5,7 +5,7 @@
  *
  * 라우트 (Hosting rewrite /api/** → 이 함수):
  *   POST /api/login   { password } → 비번(scrypt) 검증 → { token, exp }  (실패 401)
- *   POST /api/gemini  Bearer token, { prompt, images?, aspect? } → { b64 } (토큰만료/무효 401)
+ *   POST /api/gemini  Bearer token, { prompt, images?, aspect?, seed? } → { b64 } (토큰만료/무효 401)
  */
 const { onRequest } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
@@ -70,7 +70,7 @@ exports.api = onRequest(
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
         if (!verifyToken(token, TOKEN_SECRET.value())) return send(res, 401, { error: '로그인이 필요합니다(토큰 만료/무효).' });
 
-        const { prompt, images, aspect } = req.body || {};
+        const { prompt, images, aspect, seed } = req.body || {};
         if (!prompt) return send(res, 400, { error: 'prompt required' });
 
         const parts = [{ text: String(prompt) }];
@@ -80,7 +80,10 @@ exports.api = onRequest(
           if (m) parts.push({ inlineData: { mimeType: m[1], data: m[2] } });
         });
 
-        const payload = { contents: [{ parts }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: aspect || '1:1' } } };
+        const generationConfig = { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: aspect || '1:1' } };
+        // seed는 0~2147483647 정수일 때만 전달(문자열·실수·음수·범위 밖은 무시)
+        if (Number.isInteger(seed) && seed >= 0 && seed <= 2147483647) generationConfig.seed = seed;
+        const payload = { contents: [{ parts }], generationConfig };
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY.value()}`;
         const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!r.ok) { const t = await r.text().catch(() => ''); return send(res, r.status, { error: `gemini ${r.status}`, detail: t.replace(/\s+/g, ' ').slice(0, 400) }); }

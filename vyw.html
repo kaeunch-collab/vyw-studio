@@ -39,9 +39,6 @@
         }
     </script>
 
-    <!-- 로컬 개발 시 .env 환경변수를 편리하게 대체하는 로컬 스크립트 파일 링크 -->
-    <script src="env.js" onerror="console.log('로컬 env.js 파일이 감지되지 않았습니다. UI 설정을 통해 API Key 입력이 가능합니다.')"></script>
-
     <style>
         /* Hahmlet SemiBold — 제목용 명조 세리프(한글+라틴 지원, 자체 호스팅). */
         @font-face {
@@ -289,6 +286,7 @@
                     </label>
                     <div class="engine-selectors grid grid-cols-2 gap-2"></div>
                     <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                    <div class="seed-lock flex items-center gap-2 pt-1"></div>
                 </div>
 
                 <!-- 생성 버튼 -->
@@ -377,6 +375,10 @@
                             <i class="fa-solid fa-times"></i>
                         </button>
                     </div>
+                    <button onclick="inheritDressedAsModel()" id="model-inherit-btn" disabled class="w-full bg-vyw-charcoal/60 border border-vyw-glass/20 text-vyw-glass hover:text-vyw-pink hover:border-vyw-pink/50 disabled:opacity-40 disabled:pointer-events-none rounded-lg py-2.5 px-3 text-xs transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i> 직전 착장 컷을 모델로 사용
+                    </button>
+                    <p id="model-inherit-note" class="text-[10px] text-vyw-glass/45 leading-relaxed hidden">무료 엔진은 이미지 입력이 없어 <strong>Google AI에서만 반영</strong>됩니다.</p>
                 </div>
 
                 <!-- 포즈 선택 -->
@@ -412,6 +414,7 @@
                     <label class="text-xs text-vyw-glass/80 tracking-wider flex items-center gap-2"><i class="fa-solid fa-microchip text-sm"></i> 생성 엔진</label>
                     <div class="engine-selectors grid grid-cols-2 gap-2"></div>
                     <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                    <div class="seed-lock flex items-center gap-2 pt-1"></div>
                 </div>
 
                 <button onclick="generateDressed()" class="w-full bg-gradient-to-r from-vyw-deep via-vyw-cool to-vyw-pink text-vyw-white font-serif font-semibold tracking-widest py-4 px-6 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 text-sm">
@@ -441,6 +444,7 @@
                         </div>
                         <img id="model-output" src="" class="max-w-full max-h-[560px] object-contain rounded-lg shadow-2xl border border-vyw-glass/25 hidden" alt="dressed model">
                     </div>
+                    <p id="model-seed" class="text-[10px] text-vyw-glass/40 font-mono tracking-wider text-right mt-3 hidden"></p>
                 </div>
                 <div class="flex justify-between">
                     <button onclick="navigate('cloth')" class="px-5 py-3 rounded-xl border border-vyw-glass/20 text-vyw-glass hover:text-white hover:border-vyw-glass/40 transition-all text-sm tracking-wider flex items-center gap-2">
@@ -499,6 +503,7 @@
                     <label class="text-xs text-vyw-glass/80 tracking-wider flex items-center gap-2"><i class="fa-solid fa-microchip text-sm"></i> 생성 엔진</label>
                     <div class="engine-selectors grid grid-cols-2 gap-2"></div>
                     <p class="engine-note text-[10px] text-vyw-glass/50 leading-relaxed"></p>
+                    <div class="seed-lock flex items-center gap-2 pt-1"></div>
                 </div>
 
                 <button onclick="generateFinal()" class="w-full bg-gradient-to-r from-vyw-deep via-vyw-cool to-vyw-pink text-vyw-white font-serif font-semibold tracking-widest py-4 px-6 rounded-xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 text-sm">
@@ -529,6 +534,7 @@
                         </div>
                         <img id="bg-output" src="" class="max-w-full max-h-[560px] object-contain rounded-lg shadow-2xl border border-vyw-glass/25 hidden" alt="final lookbook">
                     </div>
+                    <p id="bg-seed" class="text-[10px] text-vyw-glass/40 font-mono tracking-wider text-right mt-3 hidden"></p>
                 </div>
                 <div class="flex justify-between">
                     <button onclick="navigate('model')" class="px-5 py-3 rounded-xl border border-vyw-glass/20 text-vyw-glass hover:text-white hover:border-vyw-glass/40 transition-all text-sm tracking-wider flex items-center gap-2">
@@ -598,7 +604,8 @@
 
         // ---------- 브랜드 마스터 프롬프트 상수 ----------
         const brandCoreSubject = "A photograph of a young East Asian girl (18-23 years old), highly realistic and natural looking face with exquisite details, never stylized, never doll-like or anime-like, smooth skin with light porcelain tone. Her hair is long, colored in soft pastel lilac and light lavender. Her expression is completely emotionless, neutral, eyes filled with mysterious depth looking away from the camera, lips slightly parted and completely relaxed, never smiling, radiating a fragile vulnerability.";
-        const brandCoreObjects = "She is gently cradling a single small raw, unpolished, rough natural lavender amethyst crystal in her palm, looking slightly past it with deep serene detachment. No polished gems, no cut jewelry.";
+        // 모델 참조 이미지가 있을 때 사용: 얼굴·머리색·헤어스타일·시선을 규정하지 않는 축약형(표정 무드·피부 톤/질감·포즈 태도만)
+        const brandCoreSubjectStyleOnly = "Highly realistic photographic style, smooth skin with a light porcelain tone and fine natural texture. Her expression is completely emotionless and neutral, never smiling, carrying a fragile vulnerable mood. Calm, quiet, composed pose and attitude. Never stylized, never doll-like or anime-like.";
         const brandCorePalette = "Strict color palette of muted powder pink (#EAC6D5), misty glass lilac (#D4CCDD), cool muted lilac (#9B8FB0), deep rich lilac (#4A3F5C), and soft breath white (#F3ECEE). Never include black, neon, warm golds, or bright silvers.";
         const brandCorePost = "Muted saturation, extremely subtle film grain texture, analog style 1990s Japanese fashion magazine editorial photograph tone, low contrast with soft black lift, no harsh shadows, organic analog photographic feel, completely avoiding digital CGI look.";
 
@@ -657,15 +664,15 @@
 
         // ---------- 포즈 데이터 ----------
         const posePresets = [
-            { id: 'pose-1', name: '정면 서기', icon: '🧍', desc: 'Standing straight and relaxed facing the camera, arms resting naturally at her sides, weight evenly balanced, the full outfit clearly visible, calm neutral posture' },
+            { id: 'pose-1', name: '정면 서기', icon: '🧍', desc: 'Standing straight and relaxed facing the camera, arms resting naturally at her sides, weight evenly balanced, the full outfit clearly visible, calm neutral posture', bodyDesc: 'Standing straight and relaxed with her body facing the camera, arms resting naturally at her sides, weight evenly balanced, the full outfit clearly visible, calm neutral posture' },
             { id: 'pose-2', name: '단아한 손모음', icon: '🙌', desc: 'Standing upright, shoulders slightly relaxed, both hands clasped together gently in front near the waist, quiet elegant poise' },
-            { id: 'pose-3', name: '크리스털 들고', icon: '💎', desc: 'Standing, both hands gently cradling a single raw lavender amethyst crystal near her chest, eyes softly lowered towards it, serene expression' },
-            { id: 'pose-4', name: '돌아보는', icon: '🔄', desc: 'Three-quarter angle, body turned slightly away with shoulders in relaxed profile, head turned back over the shoulder looking past the camera' },
+            { id: 'pose-3', name: '크리스털 들고', icon: '💎', desc: 'Standing, both hands gently cradling a single raw lavender amethyst crystal near her chest, eyes softly lowered towards it, serene expression', bodyDesc: 'Standing, both hands gently cradling a single raw lavender amethyst crystal near her chest, serene mood' },
+            { id: 'pose-4', name: '돌아보는', icon: '🔄', desc: 'Three-quarter angle, body turned slightly away with shoulders in relaxed profile, head turned back over the shoulder looking past the camera', bodyDesc: 'Three-quarter angle, body turned slightly away with shoulders in relaxed profile, head turned back over the shoulder' },
             { id: 'pose-5', name: '걷는 포즈', icon: '🚶', desc: 'Walking towards the camera mid-stride, one foot stepping forward, natural relaxed motion, skirt gently flowing, full-length dynamic fashion walk' },
             { id: 'pose-6', name: '앉은 포즈', icon: '🪑', desc: 'Sitting elegantly on a simple minimal stool, knees together and angled, hands resting softly on her lap, graceful upright posture, full outfit visible' },
             { id: 'pose-7', name: '한 손 허리', icon: '💁', desc: 'Standing with one hand resting lightly on her hip and the other arm relaxed, weight shifted onto one leg, subtle confident editorial fashion pose' },
             { id: 'pose-8', name: '손을 뺨에', icon: '🌸', desc: 'Standing, one hand gently raised near her cheek, head tilted softly to one side, delicate dreamy gesture with a gentle wistful expression' },
-            { id: 'pose-9', name: '뒷모습', icon: '🎀', desc: 'Seen from behind, standing and looking back over her shoulder toward the camera, showing the back detail of the dress, full-length view' }
+            { id: 'pose-9', name: '뒷모습', icon: '🎀', desc: 'Seen from behind, standing and looking back over her shoulder toward the camera, showing the back detail of the dress, full-length view', bodyDesc: 'Seen from behind, standing with her head turned back over her shoulder, showing the back detail of the dress, full-length view' }
         ];
 
         // ---------- 배경(세팅) 데이터 ----------
@@ -683,12 +690,17 @@
             clothes: [],            // {id, dataUrl, genreKey, genreLabel}
             selectedClothId: null,
             modelRefDataUrl: null,
+            modelRefSource: null,   // 'upload' | 'inherited' | null
             poseDesc: posePresets[0].desc,
             poseRefDataUrl: null,   // 업로드한 포즈 참고 사진(선택, Google AI 전용)
             dressedDataUrl: null,
+            dressedSeed: null,
             bgChoice: 'default',
             bgRefDataUrl: null,
-            finalDataUrl: null
+            finalDataUrl: null,
+            finalSeed: null,
+            seedLocked: false,
+            seed: genRandomSeed()
         };
         let clothCounter = 0;
         let userPickedEngine = false;   // 엔진 자동 기본값(키 유무) vs 사용자 수동 선택 구분
@@ -713,9 +725,12 @@
                 fragment: state.fragment, genre: state.genre, poseDesc: state.poseDesc,
                 selectedClothId: state.selectedClothId, bgChoice: state.bgChoice,
                 clothes: state.clothes, modelRefDataUrl: state.modelRefDataUrl,
+                modelRefSource: state.modelRefSource,
                 poseRefDataUrl: state.poseRefDataUrl,
-                dressedDataUrl: state.dressedDataUrl, bgRefDataUrl: state.bgRefDataUrl,
-                finalDataUrl: state.finalDataUrl
+                dressedDataUrl: state.dressedDataUrl, dressedSeed: state.dressedSeed,
+                bgRefDataUrl: state.bgRefDataUrl,
+                finalDataUrl: state.finalDataUrl, finalSeed: state.finalSeed,
+                seedLocked: state.seedLocked, seed: state.seed
             };
         }
         async function persistState() {
@@ -758,10 +773,15 @@
             state.bgChoice = snap.bgChoice || state.bgChoice;
             state.clothes = Array.isArray(snap.clothes) ? snap.clothes : [];
             state.modelRefDataUrl = snap.modelRefDataUrl || null;
+            state.modelRefSource = state.modelRefDataUrl ? (snap.modelRefSource === 'inherited' ? 'inherited' : 'upload') : null;
             state.poseRefDataUrl = snap.poseRefDataUrl || null;
             state.dressedDataUrl = snap.dressedDataUrl || null;
+            state.dressedSeed = isValidSeed(snap.dressedSeed) ? snap.dressedSeed : null;
             state.bgRefDataUrl = snap.bgRefDataUrl || null;
             state.finalDataUrl = snap.finalDataUrl || null;
+            state.finalSeed = isValidSeed(snap.finalSeed) ? snap.finalSeed : null;
+            state.seedLocked = snap.seedLocked === true && isValidSeed(snap.seed);
+            if (isValidSeed(snap.seed)) state.seed = snap.seed;
             clothCounter = snap.clothCounter || state.clothes.length;
             if (snap.engine) state.engine = snap.engine;
             if (typeof snap.userPickedEngine === 'boolean') userPickedEngine = snap.userPickedEngine;
@@ -770,7 +790,7 @@
             renderClothGallery(); updateHome();
             if (!state.poseRefDataUrl) {   // 업로드 포즈가 있으면 프리셋 선택 건너뜀(선택 시 poseRef가 지워지므로)
                 const pose = posePresets.find(p => p.desc === state.poseDesc);
-                if (pose) selectPose(pose.id);
+                if (pose) selectPose(pose.id, false);
             }
             if (state.poseRefDataUrl) {
                 document.getElementById('pose-preview').src = state.poseRefDataUrl;
@@ -808,10 +828,10 @@
             setupDropzone('model-dropzone', 'model-file-input', applyModelRef);
             setupDropzone('pose-dropzone', 'pose-file-input', applyPoseRef);
             setupDropzone('bg-dropzone', 'bg-file-input', applyBgRef);
-            initApiKey();
-            selectPose('pose-1');
+            selectPose('pose-1', false);
 
             await restoreSession();   // IndexedDB에 저장된 생성물 복원(새로고침 유지)
+            initApiKey();
 
             window.addEventListener('hashchange', () => navigate(currentHashView()));
             navigate(currentHashView());
@@ -930,7 +950,7 @@
                     </button>`;
             });
         }
-        function selectPose(poseId) {
+        function selectPose(poseId, save = true) {
             document.querySelectorAll('.pose-card').forEach(card => {
                 card.classList.remove('border-vyw-pink', 'bg-vyw-deep/30');
                 card.classList.add('border-vyw-glass/10', 'bg-vyw-charcoal/40');
@@ -941,7 +961,7 @@
             if (matched) {
                 state.poseDesc = matched.desc; document.getElementById('selected-pose').value = matched.desc;
                 if (state.poseRefDataUrl) clearPoseRef();   // 프리셋 선택 시 업로드 포즈 해제(둘 중 하나)
-                persistState();
+                if (save) persistState();
             }
         }
 
@@ -989,7 +1009,7 @@
         // ---------- 생성 엔진 (3단계 공통: 옷·모델·배경) ----------
         const engines = {
             pollinations: { label: '🆓 무료', sub: 'Pollinations · 키 불필요' },
-            imagen: { label: '✨ Google AI', sub: 'API 키 사용' }
+            imagen: { label: '✨ Google AI', sub: '로그인 필요' }
         };
         function renderEngineSelectors() {
             const free = state.engine === 'pollinations';
@@ -1000,12 +1020,40 @@
                 }).join('');
             });
             const note = free
-                ? 'API 키 없이 생성됩니다. 업로드 사진(모델·배경)과 이전 단계 픽셀의 정확한 반영은 Google AI(키)에서만 지원돼요. 무료 서버가 혼잡하면 자동 재시도합니다.'
-                : 'Google AI(키) 사용 — 생성된 옷·업로드 이미지를 실제로 반영합니다. 헤더 “API 설정”에서 키 등록 필요.';
+                ? '로그인 없이 생성됩니다. 업로드 사진(모델·배경)과 이전 단계 픽셀의 정확한 반영은 Google AI에서만 지원돼요. 무료 서버가 혼잡하면 자동 재시도합니다.'
+                : 'Google AI — 생성된 옷·업로드 이미지를 실제로 반영합니다. 헤더 “로그인”에서 로그인하세요.';
             document.querySelectorAll('.engine-note').forEach(n => n.textContent = note);
+            renderSeedLock();
+            const inheritNote = document.getElementById('model-inherit-note');
+            if (inheritNote) inheritNote.classList.toggle('hidden', !free);
             setEngineLabel('cloth-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH IMAGE · FLAT-LAY');
             setEngineLabel('model-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH · IMAGE TO IMAGE');
             setEngineLabel('bg-engine-label', free ? 'POLLINATIONS · FLUX · FREE' : 'GEMINI 2.5 FLASH · COMPOSITE');
+        }
+        // ---------- 시드 고정 (3단계 공통) ----------
+        // 잠겨 있으면 state.seed를 그대로, 아니면 생성마다 0~2147483647 무작위 정수를 뽑는다.
+        function genRandomSeed() { return Math.floor(Math.random() * 2147483648); }
+        function isValidSeed(seed) { return Number.isInteger(seed) && seed >= 0 && seed <= 2147483647; }
+        function pickSeed() {
+            if (!state.seedLocked) { state.seed = genRandomSeed(); renderSeedLock(); }
+            return state.seed;
+        }
+        function renderSeedLock() {
+            document.querySelectorAll('.seed-lock').forEach(c => {
+                c.innerHTML = `<label class="flex items-center gap-1.5 text-[11px] text-vyw-glass/70 cursor-pointer select-none"><input type="checkbox" class="seed-lock-toggle accent-vyw-pink w-3.5 h-3.5" ${state.seedLocked ? 'checked' : ''} onchange="toggleSeedLock(this.checked)">시드 고정</label>`
+                    + `<input type="number" class="seed-lock-input flex-1 min-w-0 bg-vyw-charcoal border border-vyw-glass/30 rounded-lg px-2 py-1.5 text-[11px] font-mono text-vyw-white focus:outline-none focus:border-vyw-pink disabled:opacity-40" min="0" max="2147483647" step="1" value="${state.seed}" ${state.seedLocked ? '' : 'disabled'} onchange="updateSeed(this.value)">`;
+            });
+        }
+        function toggleSeedLock(checked) {
+            state.seedLocked = !!checked;
+            if (state.seedLocked && !isValidSeed(state.seed)) state.seed = genRandomSeed();
+            renderSeedLock();
+            persistState();
+        }
+        function updateSeed(val) {
+            const n = val.trim() ? Number(val) : NaN;
+            if (isValidSeed(n)) { state.seed = n; persistState(); }
+            renderSeedLock();
         }
         function setEngineLabel(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
         function selectEngine(key) {
@@ -1110,34 +1158,10 @@
             r.onload = e => cb(e.target.result);
             r.readAsDataURL(file);
         }
-        function stripPrefix(dataUrl) { return dataUrl.split(',')[1]; }
-        function mimeOf(dataUrl) { const m = /^data:([^;]+);/.exec(dataUrl); return m ? m[1] : 'image/png'; }
 
         // ====================================================================
         // API 호출 헬퍼
         // ====================================================================
-        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
-            let lastErr;
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return await response.json();
-                    const bodyText = await response.text().catch(() => '');
-                    // 일시적 rate-limit(429)만 재시도. 단 quota=0(빌링 미설정)은 재시도 무의미 → 즉시 표면화.
-                    if (response.status === 429 && !/limit['":\s]*0|free_tier|billing/i.test(bodyText)) {
-                        await new Promise(res => setTimeout(res, delay)); delay *= 2; continue;
-                    }
-                    throw new Error(`HTTP ${response.status} — ${bodyText.replace(/\s+/g, ' ').slice(0, 300)}`);
-                } catch (err) {
-                    lastErr = err;
-                    if (err.message && err.message.startsWith('HTTP ')) throw err;  // API 오류는 즉시 중단
-                    if (i === retries - 1) throw err;                                // 네트워크 오류만 재시도
-                    await new Promise(res => setTimeout(res, delay)); delay *= 2;
-                }
-            }
-            throw lastErr;
-        }
-
         // 생성 오류를 사용자 친화 메시지로 변환(빌링/할당량/키 문제 자동 감지)
         function genErrorMsg(err, keyEngine) {
             const m = (err && err.message) || '';
@@ -1154,9 +1178,9 @@
         // Pollinations(flux) 무료 텍스트→이미지 (API 키 불필요) → dataURL 반환.
         // CORS 허용(access-control-allow-origin:*)이라 브라우저에서 직접 fetch→base64 가능.
         // 무료 티어는 IP당 동시 1건 제한 → 혼잡 시 402를 던지므로 백오프 재시도한다.
-        async function pollinationsGenerate(prompt, w = 768, h = 1024) {
-            const seed = Math.floor(Math.random() * 1000000000);
-            const params = new URLSearchParams({ width: String(w), height: String(h), nologo: 'true', nofeed: 'true', model: 'flux', seed: String(seed) });
+        async function pollinationsGenerate(prompt, w = 1024, h = 1024, seed) {
+            const usedSeed = isValidSeed(seed) ? seed : genRandomSeed();
+            const params = new URLSearchParams({ width: String(w), height: String(h), nologo: 'true', nofeed: 'true', model: 'flux', seed: String(usedSeed) });
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
             let delay = 7000;
             for (let attempt = 1; attempt <= 4; attempt++) {
@@ -1183,13 +1207,13 @@
 
         // Gemini(정식) 이미지 생성/편집을 서버 프록시(/api/gemini)로 호출.
         // 키는 서버에만 있으므로 프론트는 로그인 토큰만 사용. images: [dataUrl,...]
-        async function geminiEdit(promptText, images, aspect = '1:1') {
+        async function geminiEdit(promptText, images, aspect = '1:1', seed) {
             const token = getToken();
             if (!token) { openLoginModal(); throw new Error('로그인이 필요합니다.'); }
             const resp = await fetch('/api/gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ prompt: promptText, images: (images || []).filter(Boolean), aspect })
+                body: JSON.stringify({ prompt: promptText, images: (images || []).filter(Boolean), aspect, seed })
             });
             if (resp.status === 401) { localStorage.removeItem('vyw_auth'); initApiKey(); openLoginModal(); throw new Error('세션 만료 — 다시 로그인하세요.'); }
             if (!resp.ok) { const t = await resp.json().catch(() => ({})); throw new Error('HTTP ' + resp.status + ' — ' + (t.detail || t.error || '')); }
@@ -1203,7 +1227,7 @@
         function buildClothPrompt() {
             const garment = genres[state.genre].desc;
             const frag = fragments[state.fragment];
-            return `A flat-lay collage product photograph, top-down view, on a clean soft off-white seamless background. A complete coordinated outfit set neatly arranged with generous spacing between each item: ${garment}. Surrounding coordinating accessories laid out separately: a delicate lace choker, a hair ribbon or beret, lace gloves, a small handbag, and a pair of shoes. Among the items rests a single small raw unpolished lavender amethyst crystal and one small smooth liquid chrome orb as accent pieces. No human, no body, no mannequin, no face — only the clothing and accessories laid flat and clearly separated, like a fashion magazine product flat-lay. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost} Soft diffused even lighting, gentle natural shadows.`;
+            return `Square 1:1 flat-lay collage product photograph, top-down view, balanced square composition on a clean soft off-white seamless background. A complete coordinated outfit set neatly arranged with generous spacing between each item: ${garment}. Surrounding coordinating accessories laid out separately: a delicate lace choker, a hair ribbon or beret, lace gloves, a small handbag, and a pair of shoes. Among the items rests a single small raw unpolished lavender amethyst crystal and one small smooth liquid chrome orb as accent pieces. No human, no body, no mannequin, no face — only the clothing and accessories laid flat and clearly separated, like a fashion magazine product flat-lay. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost} Soft diffused even lighting, gentle natural shadows.`;
         }
 
         async function generateClothing() {
@@ -1212,11 +1236,12 @@
             setLoading(true, useGemini ? "Gemini 2.5 Flash Image · 옷 콜라주 생성 중..." : "Pollinations(flux) · 무료 옷 콜라주 생성 중...");
             try {
                 const prompt = buildClothPrompt();
+                const seed = pickSeed();
                 // Google AI: Imagen(유료 전용) 대신 gemini-2.5-flash-image 텍스트→이미지(모델·배경과 동일 모델로 통일)
-                const dataUrl = useGemini ? await geminiEdit(prompt, [], '1:1') : await pollinationsGenerate(prompt, 1024, 1024);
+                const dataUrl = useGemini ? await geminiEdit(prompt, [], '1:1', seed) : await pollinationsGenerate(prompt, 1024, 1024, seed);
                 if (!dataUrl) throw new Error("이미지 생성 실패");
                 const id = 'cloth-' + (++clothCounter);
-                state.clothes.push({ id, dataUrl, genreKey: state.genre, genreLabel: genres[state.genre].label, fragmentKey: state.fragment });
+                state.clothes.push({ id, dataUrl, genreKey: state.genre, genreLabel: genres[state.genre].label, fragmentKey: state.fragment, seed });
                 if (!state.selectedClothId) state.selectedClothId = id;
                 renderClothGallery();
                 updateHome();
@@ -1241,6 +1266,7 @@
                     <img src="${c.dataUrl}" class="w-full aspect-square object-cover" alt="cloth collage">
                     <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                         <span class="text-[10px] text-vyw-white/90">${c.genreLabel}</span>
+                        ${isValidSeed(c.seed) ? `<span class="block text-[9px] font-mono text-vyw-white/50">seed ${c.seed}</span>` : ''}
                     </div>
                     <button onclick="event.stopPropagation(); downloadResult(state.clothes.find(x=>x.id==='${c.id}').dataUrl, 'VYW-cloth')" class="absolute top-2 right-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center text-[11px] text-white hover:bg-vyw-pink/80 transition-all opacity-0 group-hover:opacity-100">
                         <i class="fa-solid fa-download"></i>
@@ -1272,40 +1298,61 @@
                 </div>`).join('');
         }
 
-        function applyModelRef(dataUrl) {
+        function applyModelRef(dataUrl, source = 'upload') {
             state.modelRefDataUrl = dataUrl;
+            state.modelRefSource = source;
             const preview = document.getElementById('model-preview');
             preview.src = dataUrl; preview.classList.remove('hidden');
             document.getElementById('model-dropzone-prompt').classList.add('hidden');
             document.getElementById('model-remove').classList.remove('hidden');
+            updateInheritButton();
             persistState();
-            showToast("📂 모델 사진을 불러왔습니다.", "fa-solid fa-file-image");
+            showToast(source === 'inherited' ? "♻️ 직전 착장 컷을 모델로 사용합니다." : "📂 모델 사진을 불러왔습니다.", "fa-solid fa-file-image");
         }
         function clearModelRef(event) {
             if (event) event.stopPropagation();
             state.modelRefDataUrl = null;
+            state.modelRefSource = null;
             const preview = document.getElementById('model-preview');
             preview.src = ''; preview.classList.add('hidden');
             document.getElementById('model-dropzone-prompt').classList.remove('hidden');
             document.getElementById('model-remove').classList.add('hidden');
+            updateInheritButton();
             persistState();
+        }
+        // 직전 착장 컷(state.dressedDataUrl)을 모델 참조로 승계 (applyModelRef의 상태·미리보기 경로 재사용)
+        function inheritDressedAsModel() {
+            if (!state.dressedDataUrl) { showToast("🧍 아직 착장 컷이 없습니다.", "fa-solid fa-triangle-exclamation"); return; }
+            applyModelRef(state.dressedDataUrl, 'inherited');
+        }
+        // 승계 버튼은 직전 착장 컷이 있을 때만 활성
+        function updateInheritButton() {
+            const btn = document.getElementById('model-inherit-btn');
+            if (btn) btn.disabled = !state.dressedDataUrl;
         }
 
         function buildDressPrompt(hasModelRef, hasPoseRef) {
             const frag = fragments[state.fragment];
-            const framing = `Square 1:1 fashion editorial portrait, the model standing centred in a balanced square composition, her entire body and the complete outfit clearly visible from head to shoes. Tall slender fashion-model proportions with long legs that form the lower half of the body, elongated elegant figure, small head, straight-on eye-level full-body shot with no foreshortening, anatomically correct realistic human body, NOT short legs, NOT a compressed or squashed lower body, no distortion.`;
+            const proportions = hasModelRef
+                ? 'Preserve the body proportions in the model reference, straight-on eye-level full-body shot with no foreshortening or distortion.'
+                : 'Tall slender fashion-model proportions with long legs that form the lower half of the body, elongated elegant figure, small head, straight-on eye-level full-body shot with no foreshortening, anatomically correct realistic human body, NOT short legs, NOT a compressed or squashed lower body, no distortion.';
+            const framing = `Square 1:1 fashion editorial portrait, the model standing centred in a balanced square composition, her entire body and the complete outfit clearly visible from head to shoes. ${proportions}`;
             const fidelity = `CRITICAL: faithfully reproduce the EXACT same outfit shown in the clothing flat-lay reference image — the same garments, colors, patterns, lace, ribbons, silhouette, accessories and shoes — now worn on her body as a coordinated styled look. Do not invent a different outfit.`;
             // 첨부 이미지 순서(옷 → [모델] → [포즈])에 맞춰 역할 설명 동적 구성
             let idx = 0; const roles = [];
             roles.push(`Image ${++idx} = the clothing flat-lay reference (the EXACT outfit she must wear).`);
-            if (hasModelRef) roles.push(`Image ${++idx} = the model reference; keep her face, body proportions and likeness consistent with it.`);
+            if (hasModelRef) roles.push(`Image ${++idx} = the model reference; keep her face, hair color, hairstyle, body proportions and likeness exactly as in that reference.`);
             if (hasPoseRef)  roles.push(`Image ${++idx} = the pose reference; reproduce this exact body pose and stance.`);
-            const poseInstr = hasPoseRef ? `Reproduce the exact body pose and stance shown in the pose reference image.` : `${state.poseDesc}.`;
-            return `${framing} ${brandCoreSubject} ${roles.join(' ')} ${poseInstr} ${fidelity} She also holds a small raw lavender amethyst crystal. Place her against a plain seamless neutral light backdrop (soft breath-white to glass-lilac), simple and even so it can be replaced afterward. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost}`;
+            const pose = posePresets.find(p => p.desc === state.poseDesc);
+            const poseDesc = hasModelRef && pose ? (pose.bodyDesc || pose.desc) : state.poseDesc;
+            const poseInstr = hasPoseRef ? `Reproduce the exact body pose and stance shown in the pose reference image.` : `${poseDesc}.`;
+            // 모델 참조가 있으면 얼굴·머리·시선을 규정하지 않는 축약 상수를 써서 참조 이미지의 likeness를 보존
+            const subject = hasModelRef ? brandCoreSubjectStyleOnly : brandCoreSubject;
+            return `${framing} ${subject} ${roles.join(' ')} ${poseInstr} ${fidelity} She also holds a small raw lavender amethyst crystal. Place her against a plain seamless neutral light backdrop (soft breath-white to glass-lilac), simple and even so it can be replaced afterward. Fragment mood: ${frag.mood}. ${frag.palette} ${brandCorePost}`;
         }
 
         // 키 없는(Pollinations) 모델 착장: 선택한 옷 카드의 장르·Fragment를 묘사해 텍스트→이미지로 생성
-        // (무료는 img2img 불가 → 옷이 정확히 같진 않음. 비율만 전신 3:4로 일관 유지.)
+        // (무료는 img2img 불가 → 옷이 정확히 같진 않음. 정사각 1:1 구도로 일관 유지.)
         function buildDressPromptText(cloth) {
             const g = genres[cloth.genreKey] ? genres[cloth.genreKey].desc : '';
             const frag = fragments[cloth.fragmentKey] || fragments[state.fragment];
@@ -1320,16 +1367,18 @@
             setLoading(true, useGemini ? "Gemini 2.5 Flash · 모델 착장 합성 중..." : "Pollinations(flux) · 무료 모델 착장 생성 중...");
             try {
                 let dataUrl;
+                const seed = pickSeed();
                 if (useGemini) {
                     const images = [cloth.dataUrl];                                   // 순서: 옷
                     if (state.modelRefDataUrl) images.push(state.modelRefDataUrl);     // → 모델(선택)
                     if (state.poseRefDataUrl) images.push(state.poseRefDataUrl);       // → 포즈(선택)
-                    dataUrl = await geminiEdit(buildDressPrompt(!!state.modelRefDataUrl, !!state.poseRefDataUrl), images, '1:1');
+                    dataUrl = await geminiEdit(buildDressPrompt(!!state.modelRefDataUrl, !!state.poseRefDataUrl), images, '1:1', seed);
                 } else {
-                    dataUrl = await pollinationsGenerate(buildDressPromptText(cloth), 1024, 1024);
+                    dataUrl = await pollinationsGenerate(buildDressPromptText(cloth), 1024, 1024, seed);
                 }
                 if (!dataUrl) throw new Error("착장 이미지 생성 실패");
                 state.dressedDataUrl = dataUrl;
+                state.dressedSeed = seed;
                 showDressedOutput();
                 updateHome();
                 persistState();
@@ -1353,6 +1402,12 @@
                 img.classList.add('hidden'); ph.classList.remove('hidden');
                 dl.classList.add('opacity-50', 'pointer-events-none');
             }
+            const seedEl = document.getElementById('model-seed');
+            if (seedEl) {
+                if (state.dressedDataUrl && isValidSeed(state.dressedSeed)) { seedEl.textContent = 'seed ' + state.dressedSeed; seedEl.classList.remove('hidden'); }
+                else { seedEl.textContent = ''; seedEl.classList.add('hidden'); }
+            }
+            updateInheritButton();
         }
 
         // ====================================================================
@@ -1380,7 +1435,7 @@
         }
 
         function buildFinalPrompt(hasBgRef) {
-            const base = `Take the person in the FIRST attached photograph and keep her, her face, hair, outfit, accessories and pose EXACTLY the same — do not change the model or clothing. Only replace and harmonize the background. Blend lighting, shadows and color grading so she sits naturally in the new scene.`;
+            const base = `Square 1:1 fashion editorial photograph, balanced square composition. Take the person in the FIRST attached photograph and keep her, her face, hair, outfit, accessories and pose EXACTLY the same — do not change the model or clothing. Only replace and harmonize the background. Blend lighting, shadows and color grading so she sits naturally in the new scene.`;
             let scene;
             if (hasBgRef) {
                 scene = `Place her into the scene shown in the SECOND attached background image.`;
@@ -1391,7 +1446,7 @@
         }
 
         // 키 없는(Pollinations) 배경 삽입: 뮤즈+선택 옷+포즈+선택 배경을 묘사해 전체 컷을 새로 생성
-        // (무료는 img2img 불가 → 앞 단계 인물/옷이 그대로 유지되진 않음. 비율만 전신 3:4 일관.)
+        // (무료는 img2img 불가 → 앞 단계 인물/옷이 그대로 유지되진 않음. 정사각 1:1 구도 일관.)
         function buildFinalPromptText() {
             const cloth = state.clothes.find(c => c.id === state.selectedClothId);
             const g = cloth && genres[cloth.genreKey] ? genres[cloth.genreKey].desc : '';
@@ -1407,14 +1462,16 @@
             setLoading(true, useGemini ? "Gemini 2.5 Flash · 배경 합성 중..." : "Pollinations(flux) · 무료 배경 합성 중...");
             try {
                 let dataUrl;
+                const seed = pickSeed();
                 if (useGemini) {
                     const images = state.bgRefDataUrl ? [state.dressedDataUrl, state.bgRefDataUrl] : [state.dressedDataUrl];
-                    dataUrl = await geminiEdit(buildFinalPrompt(!!state.bgRefDataUrl), images, '1:1');
+                    dataUrl = await geminiEdit(buildFinalPrompt(!!state.bgRefDataUrl), images, '1:1', seed);
                 } else {
-                    dataUrl = await pollinationsGenerate(buildFinalPromptText(), 1024, 1024);
+                    dataUrl = await pollinationsGenerate(buildFinalPromptText(), 1024, 1024, seed);
                 }
                 if (!dataUrl) throw new Error("최종 합성 이미지 생성 실패");
                 state.finalDataUrl = dataUrl;
+                state.finalSeed = seed;
                 showFinalOutput();
                 updateHome();
                 persistState();
@@ -1437,6 +1494,11 @@
             } else {
                 img.classList.add('hidden'); ph.classList.remove('hidden');
                 dl.classList.add('opacity-50', 'pointer-events-none');
+            }
+            const seedEl = document.getElementById('bg-seed');
+            if (seedEl) {
+                if (state.finalDataUrl && isValidSeed(state.finalSeed)) { seedEl.textContent = 'seed ' + state.finalSeed; seedEl.classList.remove('hidden'); }
+                else { seedEl.textContent = ''; seedEl.classList.add('hidden'); }
             }
         }
 
